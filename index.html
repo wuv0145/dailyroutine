@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Delicate Glow Up</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="./icon.jpg">
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neonPink: '#ff2a85',
+                        darkBg: '#0a0a0a',
+                        cardBg: '#1a1a1a'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0a0a; color: #fff; font-family: 'PingFang TC', 'Heiti TC', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        .neon-text { color: #ff2a85; text-shadow: 0 0 5px #ff2a85, 0 0 10px #ff2a85; }
+        .neon-border { border: 1px solid #ff2a85; box-shadow: 0 0 5px #ff2a85, inset 0 0 5px #ff2a85; }
+        .neon-bg { background-color: #ff2a85; box-shadow: 0 0 10px #ff2a85; color: white; }
+        .neon-btn { transition: all 0.2s ease-in-out; }
+        .neon-btn:active { transform: scale(0.95); }
+        ::-webkit-scrollbar { display: none; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) sepia(1) saturate(5) hue-rotate(300deg); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const ICONS = [
+            { id: 'cleanser', icon: '🧼', name: '洗面乳' },
+            { id: 'toner', icon: '🧴', name: '化妝水' },
+            { id: 'serum', icon: '💧', name: '精華液' },
+            { id: 'eyecream', icon: '👁️', name: '眼霜' },
+            { id: 'lotion', icon: '🧴', name: '乳液/面霜' },
+            { id: 'sunscreen', icon: '🛡️', name: '防曬' },
+            { id: 'mask', icon: '🎭', name: '面膜' },
+            { id: 'oil', icon: '🧪', name: '保養油' },
+            { id: 'lipbalm', icon: '💄', name: '護唇膏' }
+        ];
+
+        const App = () => {
+            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+            const [time, setTime] = useState('morning');
+            const [isEdit, setIsEdit] = useState(false);
+            
+            const [routines, setRoutines] = useState(() => {
+                const saved = localStorage.getItem('glowUpRoutines');
+                return saved ? JSON.parse(saved) : { morning: [], evening: [] };
+            });
+            const [logs, setLogs] = useState(() => {
+                const saved = localStorage.getItem('glowUpLogs');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            useEffect(() => { localStorage.setItem('glowUpRoutines', JSON.stringify(routines)); }, [routines]);
+            useEffect(() => { localStorage.setItem('glowUpLogs', JSON.stringify(logs)); }, [logs]);
+
+            const addItem = (iconItem) => {
+                const newItem = { id: Date.now().toString(), icon: iconItem.icon, name: iconItem.name, brand: '' };
+                setRoutines(prev => ({ ...prev, [time]: [...prev[time], newItem] }));
+            };
+
+            const updateBrand = (id, val) => {
+                setRoutines(prev => ({
+                    ...prev,
+                    [time]: prev[time].map(item => item.id === id ? { ...item, brand: val } : item)
+                }));
+            };
+
+            const deleteItem = (id) => {
+                setRoutines(prev => ({
+                    ...prev,
+                    [time]: prev[time].filter(item => item.id !== id)
+                }));
+            };
+
+            const toggleLog = (itemId) => {
+                setLogs(prev => {
+                    const dayLogs = prev[date] || { morning: [], evening: [] };
+                    const timeLogs = dayLogs[time] || [];
+                    const newTimeLogs = timeLogs.includes(itemId) 
+                        ? timeLogs.filter(id => id !== itemId)
+                        : [...timeLogs, itemId];
+                    return { ...prev, [date]: { ...dayLogs, [time]: newTimeLogs } };
+                });
+            };
+
+            const currentRoutine = routines[time] || [];
+            const currentLogs = (logs[date] && logs[date][time]) ? logs[date][time] : [];
+
+            return (
+                <div className="min-h-screen p-4 flex flex-col max-w-md mx-auto">
+                    {/* Header */}
+                    <header className="flex justify-between items-center mb-6 mt-4">
+                        <h1 className="text-2xl font-black italic tracking-wider neon-text">Delicate Glow Up</h1>
+                        <button onClick={() => setIsEdit(!isEdit)} className="text-neonPink p-2">
+                            {isEdit ? <i className="fas fa-check text-xl"></i> : <i className="fas fa-pen text-xl"></i>}
+                        </button>
+                    </header>
+
+                    {/* Date Picker */}
+                    <div className="mb-6 flex justify-center">
+                        <input 
+                            type="date" 
+                            value={date} 
+                            onChange={(e) => setDate(e.target.value)}
+                            className="bg-cardBg neon-border rounded-full px-6 py-2 text-center text-lg font-bold w-full max-w-xs focus:outline-none"
+                        />
+                    </div>
+
+                    {/* Day/Night Toggle */}
+                    <div className="flex bg-cardBg rounded-full p-1 mb-6">
+                        <button 
+                            className={`flex-1 py-3 rounded-full font-bold neon-btn flex justify-center items-center gap-2 ${time === 'morning' ? 'neon-bg shadow-lg shadow-pink-500/50' : 'text-gray-400'}`}
+                            onClick={() => setTime('morning')}
+                        >
+                            <i className="fas fa-sun"></i> 早晨
+                        </button>
+                        <button 
+                            className={`flex-1 py-3 rounded-full font-bold neon-btn flex justify-center items-center gap-2 ${time === 'evening' ? 'neon-bg shadow-lg shadow-pink-500/50' : 'text-gray-400'}`}
+                            onClick={() => setTime('evening')}
+                        >
+                            <i className="fas fa-moon"></i> 夜間
+                        </button>
+                    </div>
+
+                    {/* Edit Mode - Icon Panel */}
+                    {isEdit && (
+                        <div className="mb-6 bg-cardBg p-4 rounded-2xl neon-border">
+                            <p className="text-sm text-gray-400 mb-3 text-center">點選下方圖示加入保養程序</p>
+                            <div className="grid grid-cols-3 gap-3">
+                                {ICONS.map(i => (
+                                    <button key={i.id} onClick={() => addItem(i)} className="flex flex-col items-center justify-center p-3 rounded-xl bg-darkBg border border-gray-800 hover:border-neonPink active:bg-neonPink transition-colors">
+                                        <span className="text-2xl mb-1">{i.icon}</span>
+                                        <span className="text-xs text-gray-300">{i.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Routine List */}
+                    <div className="flex-1 overflow-y-auto pb-10">
+                        {currentRoutine.length === 0 ? (
+                            <div className="text-center text-gray-500 mt-10">
+                                {isEdit ? "請從上方選擇保養品加入清單" : "目前沒有設定保養程序，請點擊右上角編輯按鈕新增"}
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {currentRoutine.map((item) => {
+                                    const isCompleted = currentLogs.includes(item.id);
+                                    return (
+                                        <div key={item.id} className={`flex items-center p-4 rounded-2xl transition-all ${isCompleted && !isEdit ? 'bg-opacity-20 bg-pink-500 border border-neonPink' : 'bg-cardBg border border-gray-800'}`}>
+                                            <div className="text-3xl mr-4">{item.icon}</div>
+                                            <div className="flex-1">
+                                                <div className="font-bold text-lg">{item.name}</div>
+                                                {isEdit ? (
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="輸入品牌或款式..." 
+                                                        value={item.brand} 
+                                                        onChange={(e) => updateBrand(item.id, e.target.value)}
+                                                        className="bg-darkBg text-sm px-3 py-2 rounded-lg mt-2 w-full text-gray-200 focus:outline-none focus:border-neonPink border border-gray-700"
+                                                    />
+                                                ) : (
+                                                    <div className="text-sm text-gray-400 mt-1">{item.brand || '未設定品牌'}</div>
+                                                )}
+                                            </div>
+                                            
+                                            {isEdit ? (
+                                                <button onClick={() => deleteItem(item.id)} className="ml-3 text-red-400 p-3 rounded-full bg-red-500 bg-opacity-10 hover:bg-opacity-20">
+                                                    <i className="fas fa-trash"></i>
+                                                </button>
+                                            ) : (
+                                                <button onClick={() => toggleLog(item.id)} className={`ml-3 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${isCompleted ? 'bg-neonPink border-neonPink text-white shadow-[0_0_10px_#ff2a85]' : 'border-gray-600 text-transparent'}`}>
+                                                    <i className="fas fa-check"></i>
+                                                </button>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

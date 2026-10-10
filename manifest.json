@@ -1,0 +1,16 @@
+{
+  "name": "Delicate Glow Up",
+  "short_name": "Glow Up",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ff2a85",
+  "description": "Daily Skincare Routine Tracker",
+  "icons": [
+    {
+      "src": "./icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    }
+  ]
+}
