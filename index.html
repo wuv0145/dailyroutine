@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Delicate Glow Up</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="./icon.jpg">
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neonPink: 'var(--theme-color)',
+                        darkBg: '#0a0a0a',
+                        cardBg: '#1a1a1a',
+                        cardDark: '#121212'
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slight': 'bounceSlight 2s infinite',
+                        'heart-float': 'heartFloat 1s ease-out forwards'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: 1, filter: 'drop-shadow(0 0 15px var(--theme-color))' },
+                            '50%': { opacity: .7, filter: 'drop-shadow(0 0 35px var(--theme-color))' }
+                        },
+                        bounceSlight: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        },
+                        heartFloat: {
+                            '0%': { opacity: 1, transform: 'translateY(0) scale(1)' },
+                            '100%': { opacity: 0, transform: 'translateY(-50px) scale(2)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --theme-color: #ff2a85;
+        }
+        body { background-color: #0a0a0a; color: #fff; font-family: 'PingFang TC', 'Heiti TC', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; transition: all 0.5s ease; user-select: none; }
+        .neon-text-light { color: var(--theme-color); text-shadow: 0 0 2px var(--theme-color), 0 0 4px var(--theme-color); transition: all 0.5s ease; }
+        .neon-border { border: 1px solid var(--theme-color); box-shadow: 0 0 3px var(--theme-color), inset 0 0 3px var(--theme-color); transition: all 0.5s ease; }
+        .neon-bg { background-color: var(--theme-color); box-shadow: 0 0 8px var(--theme-color); color: white; transition: all 0.5s ease; }
+        .neon-text-theme { color: var(--theme-color); transition: color 0.5s ease; }
+        .neon-border-theme { border-color: var(--theme-color); transition: border-color 0.5s ease; }
+        .neon-bg-theme { background-color: var(--theme-color); transition: background-color 0.5s ease; }
+        .shadow-theme { box-shadow: 0 0 10px var(--theme-color); }
+        .shadow-inset-theme { box-shadow: inset 0 0 5px rgba(0,0,0,1); }
+        .neon-btn { transition: all 0.2s ease-in-out; }
+        .neon-btn:active { transform: scale(0.95); }
+        ::-webkit-scrollbar { display: none; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) sepia(1) saturate(5) hue-rotate(300deg); }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #333; padding: 12px 8px; text-align: left; }
+        th { color: #888; font-size: 0.85rem; font-weight: normal; }
+        
+        .theme-morning { --theme-color: #ff6b9e; }
+        .theme-night { --theme-color: #b026ff; }
+        .theme-maxlevel { --theme-color: #00f0ff; }
+        
+        /* 增加手繪卡通質感濾鏡 */
+        .cartoon-pet { filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5)) saturate(1.2) contrast(1.1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const QUOTES = [
+            "今天的你，比昨天更閃耀一點了嗎？",
+            "保養不是為了取悅別人，是為了自己的底氣。",
+            "喝水。護膚。愛自己。剩下的隨他去。",
+            "你的光芒，不需要任何人允許。",
+            "精緻是一種態度，與他人無關。",
+            "把時間花在自己身上，是最穩賺不賠的投資。",
+            "卸下疲憊，今晚只做最真實的自己。"
+        ];
+
+        const ICONS = [
+            { id: 'cleanser', icon: '🧼', name: '洗面乳' },
+            { id: 'toner', icon: '🧴', name: '化妝水' },
+            { id: 'serum', icon: '💧', name: '精華液' },
+            { id: 'eyecream', icon: '👁️', name: '眼霜' },
+            { id: 'lotion', icon: '🧴', name: '乳液/面霜' },
+            { id: 'sunscreen', icon: '🛡️', name: '防曬' },
+            { id: 'mask', icon: '🎭', name: '面膜' },
+            { id: 'oil', icon: '🧪', name: '保養油' },
+            { id: 'lipbalm', icon: '💄', name: '護唇膏' },
+            { id: 'other', icon: '✨', name: '其他' }
+        ];
+
+        // 簡易食物熱量字典 (每份/100g 參考)
+        const FOOD_CALORIES = {
+            '蛋餅': 300, '漢堡': 500, '拿鐵': 150, '白飯': 280, '水餃': 60,
+            '麵條': 350, '便當': 800, '沙拉': 120, '蘋果': 50, '香蕉': 90,
+            '牛奶': 120, '豆漿': 100, '吐司': 140, '三明治': 350, '牛排': 600,
+            '雞胸肉': 165, '珍珠奶茶': 500, '薯條': 330, '披薩': 285, '茶葉蛋': 75,
+            '燕麥': 150, '優格': 100, '餅乾': 200, '巧克力': 250, '炒飯': 600,
+            '火鍋': 800, '壽司': 300, '生魚片': 150, '滷肉飯': 450, '排骨飯': 750
+        };
+
+        const PETS = {
+            penguin: { name: '小企鵝', stages: ['🥚', '🐣', '🐧', '🐧❄️✨'], dialogues: ["咕嚕！", "今天好冷，要抱抱❄️", "一起發光吧！", "拍拍翅膀～", "最喜歡你了！"] },
+            bird: { name: '綠繡眼', stages: ['🥚', '🐣', '🐦', '🐦🌿✨'], dialogues: ["啾啾！", "今天也要開心喔🌿", "為你唱歌～", "蹭蹭你！", "飛高高！"] },
+            snail: { name: '小蝸牛', stages: ['🥚', '🌱', '🐌', '🐌🌈✨'], dialogues: ["慢慢來，比較快🐌", "我今天爬了5公分喔！", "你的努力我都看見了🌈", "蹭蹭～", "你好呀！"] },
+            sheep: { name: '小綿羊', stages: ['🥚', '🐑', '🐏', '🐑☁️✨'], dialogues: ["咩～", "像雲朵一樣柔軟☁️", "今天也很棒呢！", "好溫暖呀～", "要一起睡覺嗎？"] },
+            cat: { name: '星霓貓', stages: ['🥚', '🐱', '🐈', '😻✨'], dialogues: ["喵～", "呼嚕呼嚕...", "本喵今天也很滿意😻", "摸摸我的頭！", "只給你摸喔。"] },
+            dog: { name: '幻光犬', stages: ['🥚', '🐶', '🐕', '🥰✨'], dialogues: ["汪汪！", "最喜歡你了！🥰", "陪我玩陪我玩！", "搖尾巴～", "今天辛苦啦！"] }
+        };
+
+        const EXP_PER_LEVEL = 20;
+        const MAX_LEVEL = 4;
+
+        const App = () => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const [date, setDate] = useState(todayStr);
+            const [activeTab, setActiveTab] = useState('home');
+            
+            const [themeClass, setThemeClass] = useState('');
+            const [quote, setQuote] = useState('');
+
+            const [lastActiveDate, setLastActiveDate] = useState(() => localStorage.getItem('glowUpLastActive') || '');
+            const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('glowUpStreak')) || 0);
+
+            // 獨立寵物經驗值
+            const [petType, setPetType] = useState(() => localStorage.getItem('glowUpPetType') || 'penguin');
+            const [petExps, setPetExps] = useState(() => {
+                const saved = localStorage.getItem('glowUpPetExps');
+                if (saved) return JSON.parse(saved);
+                // 兼容舊版：如果舊版只有單一 petExp，把它轉移到當前寵物上
+                const oldExp = parseInt(localStorage.getItem('glowUpPetExp')) || 0;
+                return { penguin: oldExp, bird: 0, snail: 0, sheep: 0, cat: 0, dog: 0 };
+            });
+            const petExp = petExps[petType] || 0;
+            const [expNotice, setExpNotice] = useState('');
+
+            // --- Interaction States ---
+            const [interactionMsg, setInteractionMsg] = useState('');
+            const [isInteracting, setIsInteracting] = useState(false);
+            const [hearts, setHearts] = useState([]);
+            const interactionTimerRef = useRef(null);
+
+            // --- Skincare State ---
+            const [time, setTime] = useState('morning');
+            const [isEdit, setIsEdit] = useState(false);
+            const [routines, setRoutines] = useState(() => {
+                const saved = localStorage.getItem('glowUpRoutines');
+                return saved ? JSON.parse(saved) : { morning: [], evening: [] };
+            });
+            const [logs, setLogs] = useState(() => {
+                const saved = localStorage.getItem('glowUpLogs');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            // --- Health State ---
+            const [isHealthEdit, setIsHealthEdit] = useState(false);
+            const [healthProfile, setHealthProfile] = useState(() => {
+                const saved = localStorage.getItem('glowUpHealthProfile');
+                return saved ? JSON.parse(saved) : { height: '' };
+            });
+            const [healthLogs, setHealthLogs] = useState(() => {
+                const saved = localStorage.getItem('glowUpHealthLogs');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            // --- Diet State ---
+            const [dietLogs, setDietLogs] = useState(() => {
+                const saved = localStorage.getItem('glowUpDietLogs');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            useEffect(() => {
+                setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+                if (lastActiveDate !== todayStr) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    if (lastActiveDate !== yesterdayStr && lastActiveDate !== '') {
+                        setStreak(0);
+                    }
+                }
+            }, []);
+
+            useEffect(() => {
+                const currentLevel = Math.floor(petExp / EXP_PER_LEVEL) + 1;
+                if (currentLevel >= MAX_LEVEL) {
+                    setThemeClass('theme-maxlevel');
+                } else {
+                    const hour = new Date().getHours();
+                    if (hour >= 6 && hour < 18) {
+                        setThemeClass('theme-morning');
+                    } else {
+                        setThemeClass('theme-night');
+                    }
+                }
+            }, [petExp]);
+
+            useEffect(() => { localStorage.setItem('glowUpLastActive', lastActiveDate); }, [lastActiveDate]);
+            useEffect(() => { localStorage.setItem('glowUpStreak', streak.toString()); }, [streak]);
+            useEffect(() => { localStorage.setItem('glowUpPetType', petType); }, [petType]);
+            useEffect(() => { localStorage.setItem('glowUpPetExps', JSON.stringify(petExps)); }, [petExps]);
+            useEffect(() => { localStorage.setItem('glowUpRoutines', JSON.stringify(routines)); }, [routines]);
+            useEffect(() => { localStorage.setItem('glowUpLogs', JSON.stringify(logs)); }, [logs]);
+            useEffect(() => { localStorage.setItem('glowUpHealthProfile', JSON.stringify(healthProfile)); }, [healthProfile]);
+            useEffect(() => { localStorage.setItem('glowUpHealthLogs', JSON.stringify(healthLogs)); }, [healthLogs]);
+            useEffect(() => { localStorage.setItem('glowUpDietLogs', JSON.stringify(dietLogs)); }, [dietLogs]);
+
+            const recordActivity = () => {
+                if (lastActiveDate !== todayStr) {
+                    if (lastActiveDate !== '') {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        if (lastActiveDate === yesterday.toISOString().split('T')[0]) {
+                            setStreak(prev => prev + 1);
+                        } else {
+                            setStreak(1);
+                        }
+                    } else {
+                        setStreak(1);
+                    }
+                    setLastActiveDate(todayStr);
+                }
+            };
+
+            const addExp = (amount, source) => {
+                setPetExps(prev => ({
+                    ...prev,
+                    [petType]: (prev[petType] || 0) + amount
+                }));
+                setExpNotice(`+${amount} EXP (${source})`);
+                setTimeout(() => setExpNotice(''), 2000);
+                recordActivity();
+            };
+
+            const handlePetInteract = () => {
+                const currentPetData = PETS[petType] || PETS['penguin'];
+                const msgs = currentPetData.dialogues;
+                const randomMsg = msgs[Math.floor(Math.random() * msgs.length)];
+                
+                setInteractionMsg(randomMsg);
+                setIsInteracting(true);
+                
+                const newHeart = { id: Date.now(), x: Math.random() * 60 - 30 };
+                setHearts(prev => [...prev, newHeart]);
+                setTimeout(() => {
+                    setHearts(prev => prev.filter(h => h.id !== newHeart.id));
+                }, 1000);
+
+                if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
+                interactionTimerRef.current = setTimeout(() => {
+                    setInteractionMsg('');
+                    setIsInteracting(false);
+                }, 2500);
+            };
+
+            const level = Math.floor(petExp / EXP_PER_LEVEL) + 1;
+            const currentExpInLevel = petExp % EXP_PER_LEVEL;
+            const isMaxLevel = level >= MAX_LEVEL;
+            const displayLevel = isMaxLevel ? MAX_LEVEL : level;
+            const progress = isMaxLevel ? 100 : (currentExpInLevel / EXP_PER_LEVEL) * 100;
+            const stageIndex = isMaxLevel ? 3 : (level === 1 ? 0 : (level === 2 ? 1 : 2));
+            const currentPet = PETS[petType] || PETS['penguin'];
+            const petEmoji = currentPet.stages[stageIndex];
+            
+            // 放大寵物尺寸
+            const getPetSize = () => {
+                if (isMaxLevel) return 'text-[150px]';
+                if (level === 3) return 'text-[120px]';
+                if (level === 2) return 'text-[100px]';
+                return 'text-[80px]'; // 蛋也變大了
+            };
+
+            const getPetMood = () => {
+                const hour = new Date().getHours();
+                const isNight = hour >= 22 || hour < 5;
+                const hasLogsToday = (logs[todayStr] && (logs[todayStr].morning?.length > 0 || logs[todayStr].evening?.length > 0)) || 
+                                     (healthLogs[todayStr] && (healthLogs[todayStr].weight || healthLogs[todayStr].bodyFat)) ||
+                                     (dietLogs[todayStr] && dietLogs[todayStr].length > 0);
+
+                if (isMaxLevel) return '👑';
+                if (isNight) return '💤';
+                if (hasLogsToday) return '✨';
+                return '💭';
+            };
+
+            // Handlers
+            const addItem = (iconItem) => {
+                const newItem = { id: Date.now().toString(), icon: iconItem.icon, name: iconItem.name, brand: '' };
+                setRoutines(prev => ({ ...prev, [time]: [...prev[time], newItem] }));
+            };
+            const updateBrand = (id, val) => {
+                setRoutines(prev => ({ ...prev, [time]: prev[time].map(item => item.id === id ? { ...item, brand: val } : item) }));
+            };
+            const deleteItem = (id) => {
+                setRoutines(prev => ({ ...prev, [time]: prev[time].filter(item => item.id !== id) }));
+            };
+            const toggleLog = (itemId) => {
+                setLogs(prev => {
+                    const dayLogs = prev[date] || { morning: [], evening: [] };
+                    const timeLogs = dayLogs[time] || [];
+                    const isCompleted = timeLogs.includes(itemId);
+                    const newTimeLogs = isCompleted ? timeLogs.filter(id => id !== itemId) : [...timeLogs, itemId];
+                    if (!isCompleted) addExp(2, '保養');
+                    return { ...prev, [date]: { ...dayLogs, [time]: newTimeLogs } };
+                });
+            };
+            const updateHealthLog = (field, value) => {
+                setHealthLogs(prev => ({ ...prev, [date]: { ...(prev[date] || { weight: '', bodyFat: '' }), [field]: value } }));
+            };
+            const todayHealth = healthLogs[date] || { weight: '', bodyFat: '' };
+            let bmi = '--';
+            if (healthProfile.height && todayHealth.weight) {
+                const h = parseFloat(healthProfile.height) / 100;
+                const w = parseFloat(todayHealth.weight);
+                if (h > 0 && w > 0) bmi = (w / (h * h)).toFixed(1);
+            }
+            const todayDiet = dietLogs[date] || [];
+            const addDietRow = () => {
+                const newItem = { id: Date.now().toString(), meal: '午餐', food: '', calories: '' };
+                setDietLogs(prev => ({ ...prev, [date]: [...(prev[date] || []), newItem] }));
+                addExp(3, '飲食');
+            };
+            const updateDietItem = (id, field, value) => {
+                setDietLogs(prev => {
+                    const currentLogs = prev[date] || [];
+                    const newLogs = currentLogs.map(item => {
+                        if (item.id === id) {
+                            let updatedItem = { ...item, [field]: value };
+                            // 自動帶入熱量邏輯
+                            if (field === 'food') {
+                                const matchedKey = Object.keys(FOOD_CALORIES).find(k => value.includes(k));
+                                if (matchedKey) {
+                                    updatedItem.calories = FOOD_CALORIES[matchedKey];
+                                }
+                            }
+                            return updatedItem;
+                        }
+                        return item;
+                    });
+                    return { ...prev, [date]: newLogs };
+                });
+            };
+            const deleteDietItem = (id) => {
+                setDietLogs(prev => ({ ...prev, [date]: (prev[date] || []).filter(item => item.id !== id) }));
+            };
+            const totalCalories = todayDiet.reduce((sum, item) => sum + (parseFloat(item.calories) || 0), 0);
+
+            const renderHome = () => (
+                <div className="animate-fade-in flex flex-col items-center h-full pt-4">
+                    <div className="text-center px-4 mb-4">
+                        <p className="text-xs text-gray-400 italic font-light tracking-wider">"{quote}"</p>
+                    </div>
+
+                    <div className={`w-full bg-cardDark border border-gray-800 rounded-3xl p-6 flex flex-col items-center relative overflow-hidden ${isMaxLevel ? 'shadow-theme' : 'shadow-[0_0_20px_rgba(255,255,255,0.02)]'}`}>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 neon-bg-theme rounded-full opacity-10 blur-3xl"></div>
+                        
+                        <div className="w-full flex justify-between items-center mb-4 z-10">
+                            <h2 className="text-gray-400 text-sm"><i className="fas fa-paw neon-text-theme mr-2"></i>專屬夥伴</h2>
+                            {streak > 0 && (
+                                <div className="flex items-center text-xs font-bold bg-darkBg px-3 py-1 rounded-full border border-gray-800">
+                                    <span className="text-orange-500 mr-1 animate-bounce-slight">🔥</span> 
+                                    連續 <span className="neon-text-theme mx-1">{streak}</span> 天
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Interactive Pet Area */}
+                        <div 
+                            className="h-48 flex items-center justify-center z-10 mb-8 mt-4 relative w-full cursor-pointer" 
+                            onClick={handlePetInteract}
+                            style={{ WebkitTapHighlightColor: 'transparent' }}
+                        >
+                            {/* Mood/Dialogue Bubble */}
+                            <div className={`absolute -top-6 right-[15%] bg-cardBg border border-gray-700 rounded-[20px] px-4 py-2 text-lg shadow-lg z-20 ${interactionMsg ? 'neon-border-theme neon-text-theme animate-bounce font-bold' : 'animate-bounce-slight'}`}>
+                                {interactionMsg || getPetMood()}
+                            </div>
+                            
+                            {/* Floating Hearts */}
+                            {hearts.map(heart => (
+                                <div key={heart.id} className="absolute text-neonPink text-3xl animate-heart-float z-30" style={{ left: `calc(50% + ${heart.x}px)`, top: '20%' }}>❤️</div>
+                            ))}
+
+                            <div className={`transition-all duration-300 ${isInteracting ? 'scale-110 rotate-3' : ''} animate-float drop-shadow-2xl ${isMaxLevel ? 'animate-pulse-glow' : ''}`}>
+                                <span className={`${getPetSize()} cartoon-pet select-none`}>{petEmoji}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="w-full z-10 mt-6">
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="font-black text-xl text-white">
+                                    Lv. {displayLevel} 
+                                    <span className="text-sm font-normal neon-text-theme ml-1">{currentPet.name}</span>
+                                    {isMaxLevel && <span className="ml-2 text-xs bg-darkBg neon-border-theme px-2 py-0.5 rounded-full text-white">MAX 👑</span>}
+                                </span>
+                                {!isMaxLevel && <span className="text-xs text-gray-400">{currentExpInLevel} / {EXP_PER_LEVEL} EXP</span>}
+                            </div>
+                            
+                            <div className="w-full bg-gray-900 rounded-full h-3 shadow-inset-theme">
+                                <div className="neon-bg-theme h-3 rounded-full transition-all duration-500 ease-out shadow-theme" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            
+                            <p className="text-center text-xs text-gray-500 mt-4 h-4">
+                                點擊摸摸牠！每次記錄，專屬寵物也會長大喔！
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="w-full mt-4 bg-cardBg rounded-2xl p-4 border border-gray-800">
+                        <p className="text-xs text-gray-400 mb-3 text-center">切換寵物 (經驗值獨立)</p>
+                        <div className="grid grid-cols-3 gap-2">
+                            {Object.entries(PETS).map(([key, pet]) => {
+                                const pExp = petExps[key] || 0;
+                                const pLvl = Math.floor(pExp / EXP_PER_LEVEL) + 1;
+                                const isPMax = pLvl >= MAX_LEVEL;
+                                const sIdx = isPMax ? 3 : (pLvl === 1 ? 0 : (pLvl === 2 ? 1 : 2));
+                                
+                                return (
+                                    <button 
+                                        key={key} 
+                                        onClick={() => setPetType(key)}
+                                        className={`flex flex-col items-center p-2 rounded-xl transition-all ${petType === key ? 'bg-black/40 neon-border-theme shadow-theme' : 'bg-darkBg border border-gray-800 text-gray-500 hover:border-gray-600'}`}
+                                    >
+                                        <span className="text-3xl mb-1 cartoon-pet">{pet.stages[sIdx]}</span>
+                                        <span className="text-[10px] font-bold">{pet.name} <span className="text-gray-500 font-normal">Lv.{isPMax ? 'MAX' : pLvl}</span></span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderSkincare = () => {
+                const currentRoutine = routines[time] || [];
+                const currentLogs = (logs[date] && logs[date][time]) ? logs[date][time] : [];
+                return (
+                    <div className="flex flex-col h-full">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="flex bg-cardBg rounded-full p-1 flex-1 mr-4">
+                                <button className={`flex-1 py-2 rounded-full font-bold text-sm neon-btn ${time === 'morning' ? 'neon-bg-theme' : 'text-gray-400'}`} onClick={() => setTime('morning')}>早晨</button>
+                                <button className={`flex-1 py-2 rounded-full font-bold text-sm neon-btn ${time === 'evening' ? 'neon-bg-theme' : 'text-gray-400'}`} onClick={() => setTime('evening')}>夜間</button>
+                            </div>
+                            <button onClick={() => setIsEdit(!isEdit)} className="neon-text-theme p-2 w-10 text-center">
+                                {isEdit ? <i className="fas fa-check text-xl"></i> : <i className="fas fa-pen text-xl"></i>}
+                            </button>
+                        </div>
+                        {isEdit && (
+                            <div className="mb-6 bg-cardDark p-4 rounded-xl border border-gray-800 shadow-theme">
+                                <p className="text-xs text-gray-400 mb-3 text-center">點選下方圖示加入保養程序</p>
+                                <div className="grid grid-cols-5 gap-2">
+                                    {ICONS.map(i => (
+                                        <button key={i.id} onClick={() => addItem(i)} className="flex flex-col items-center p-2 rounded-lg bg-cardBg border border-gray-800 hover:neon-border-theme active:neon-bg-theme transition-colors">
+                                            <span className="text-xl mb-1">{i.icon}</span><span className="text-[10px] text-gray-300 scale-90">{i.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <div className="flex-1 overflow-y-auto pb-10 space-y-3">
+                            {currentRoutine.length === 0 ? (
+                                <div className="text-center text-gray-500 mt-10 text-sm">{isEdit ? "請選擇保養品加入清單" : "目前沒有設定，請點擊右上角編輯"}</div>
+                            ) : (
+                                currentRoutine.map((item) => {
+                                    const isCompleted = currentLogs.includes(item.id);
+                                    return (
+                                        <div key={item.id} className={`flex items-center p-3 rounded-xl transition-all ${isCompleted && !isEdit ? 'bg-black/30 border border-gray-600' : 'bg-cardBg border border-gray-800'}`}>
+                                            <div className="text-2xl mr-3">{item.icon}</div>
+                                            <div className="flex-1">
+                                                <div className="font-bold text-base">{item.name}</div>
+                                                {isEdit ? (
+                                                    <input type="text" placeholder="輸入品牌..." value={item.brand} onChange={(e) => updateBrand(item.id, e.target.value)} className="bg-darkBg text-xs px-2 py-1.5 rounded mt-1 w-full text-gray-200 focus:outline-none focus:neon-border-theme border border-gray-700" />
+                                                ) : (
+                                                    <div className="text-xs text-gray-400 mt-1">{item.brand || '未設定品牌'}</div>
+                                                )}
+                                            </div>
+                                            {isEdit ? (
+                                                <button onClick={() => deleteItem(item.id)} className="ml-3 text-red-400 p-2 rounded-full bg-red-500/10"><i className="fas fa-trash text-sm"></i></button>
+                                            ) : (
+                                                <button onClick={() => toggleLog(item.id)} className={`ml-3 w-8 h-8 rounded-full flex items-center justify-center border transition-all ${isCompleted ? 'neon-bg-theme neon-border-theme text-white shadow-theme' : 'border-gray-600 text-transparent'}`}><i className="fas fa-check text-xs"></i></button>
+                                            )}
+                                        </div>
+                                    )
+                                })
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderHealth = () => (
+                <div className="animate-fade-in space-y-6">
+                    <div className="flex justify-end">
+                        <button 
+                            onClick={() => setIsHealthEdit(!isHealthEdit)} 
+                            className={`px-4 py-1.5 rounded-full font-bold text-sm transition-all ${isHealthEdit ? 'neon-bg-theme text-white shadow-theme' : 'bg-cardBg border border-gray-700 neon-text-theme'}`}
+                        >
+                            {isHealthEdit ? <><i className="fas fa-save mr-1"></i> 儲存</> : <><i className="fas fa-pen mr-1"></i> 編輯紀錄</>}
+                        </button>
+                    </div>
+
+                    <div className="bg-cardBg p-5 rounded-2xl border border-gray-800">
+                        <h2 className="text-sm text-gray-400 mb-4"><i className="fas fa-user mr-2 neon-text-theme"></i>基本資料 (共用)</h2>
+                        <div className="flex items-center justify-between">
+                            <span className="text-base">身高 (cm)</span>
+                            {isHealthEdit ? (
+                                <input type="number" placeholder="例如: 160" value={healthProfile.height} onChange={(e) => setHealthProfile({height: e.target.value})} className="bg-darkBg w-24 text-right px-3 py-2 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors" />
+                            ) : (
+                                <span className="font-bold text-lg">{healthProfile.height || '--'}</span>
+                            )}
+                        </div>
+                    </div>
+                    <div className="bg-cardBg p-5 rounded-2xl border neon-border-theme shadow-theme">
+                        <h2 className="text-sm text-gray-400 mb-4"><i className="fas fa-weight-scale mr-2 neon-text-theme"></i>今日數值 ({date})</h2>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-base">體重 (kg)</span>
+                                {isHealthEdit ? (
+                                    <input type="number" value={todayHealth.weight} onChange={(e) => updateHealthLog('weight', e.target.value)} onBlur={(e) => { if(e.target.value) addExp(1, '體重'); }} className="bg-darkBg w-24 text-right px-3 py-2 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors" />
+                                ) : (
+                                    <span className="font-bold text-lg">{todayHealth.weight || '--'}</span>
+                                )}
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-base">體脂率 (%)</span>
+                                {isHealthEdit ? (
+                                    <input type="number" value={todayHealth.bodyFat} onChange={(e) => updateHealthLog('bodyFat', e.target.value)} onBlur={(e) => { if(e.target.value) addExp(1, '體脂'); }} className="bg-darkBg w-24 text-right px-3 py-2 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors" />
+                                ) : (
+                                    <span className="font-bold text-lg">{todayHealth.bodyFat || '--'}</span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="mt-6 pt-4 border-t border-gray-800 flex justify-between items-center">
+                            <span className="text-gray-400">BMI 指數</span>
+                            <span className="text-2xl font-black neon-text-theme">{bmi}</span>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderDiet = () => (
+                <div className="animate-fade-in flex flex-col h-full">
+                    <div className="bg-cardBg rounded-2xl border border-gray-800 p-4 mb-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <h2 className="text-sm text-gray-400"><i className="fas fa-utensils mr-2 neon-text-theme"></i>今日飲食 ({date})</h2>
+                            <button onClick={addDietRow} className="neon-text-theme text-sm border neon-border-theme px-3 py-1 rounded-full hover:neon-bg-theme hover:text-white transition-colors">
+                                <i className="fas fa-plus mr-1"></i> 新增
+                            </button>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table>
+                                <thead><tr><th className="w-1/4">餐別</th><th className="w-2/5">食物內容</th><th className="w-1/4 text-right">熱量</th><th className="w-10 text-center"></th></tr></thead>
+                                <tbody>
+                                    {todayDiet.map(item => (
+                                        <tr key={item.id}>
+                                            <td><select value={item.meal} onChange={(e) => updateDietItem(item.id, 'meal', e.target.value)} className="bg-darkBg text-white border border-gray-700 rounded px-1 py-1 w-full text-xs focus:outline-none focus:neon-border-theme"><option>早餐</option><option>午餐</option><option>晚餐</option><option>點心</option><option>飲料</option></select></td>
+                                            <td><input type="text" placeholder="輸入名稱自動帶熱量..." value={item.food} onChange={(e) => updateDietItem(item.id, 'food', e.target.value)} className="bg-darkBg text-white border border-gray-700 rounded px-2 py-1 w-full text-xs focus:outline-none focus:neon-border-theme" /></td>
+                                            <td><input type="number" placeholder="kcal" value={item.calories} onChange={(e) => updateDietItem(item.id, 'calories', e.target.value)} className="bg-darkBg text-white border border-gray-700 rounded px-2 py-1 w-full text-xs text-right focus:outline-none focus:neon-border-theme" /></td>
+                                            <td className="text-center"><button onClick={() => deleteDietItem(item.id)} className="text-red-400/70 hover:text-red-400 p-1"><i className="fas fa-times"></i></button></td>
+                                        </tr>
+                                    ))}
+                                    {todayDiet.length === 0 && <tr><td colSpan="4" className="text-center text-gray-500 py-6 text-sm">尚未記錄今日飲食</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div className="bg-black/20 border neon-border-theme rounded-xl p-4 flex justify-between items-center mt-auto shadow-theme shrink-0 mb-4">
+                        <span className="font-bold text-gray-300">今日總熱量</span>
+                        <div className="text-2xl font-black neon-text-theme">{totalCalories} <span className="text-xs font-normal text-gray-400">kcal</span></div>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className={`h-screen flex flex-col max-w-md mx-auto relative overflow-hidden bg-darkBg text-white ${themeClass}`}>
+                    {expNotice && (
+                        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-50 neon-bg-theme text-white px-4 py-1 rounded-full font-bold text-sm shadow-theme animate-bounce">
+                            {expNotice}
+                        </div>
+                    )}
+
+                    <div className="p-5 pb-2 shrink-0">
+                        <h1 className="text-2xl font-black italic tracking-wider neon-text-light text-center mb-4">Delicate Glow Up</h1>
+                        <div className="flex justify-center">
+                            <input 
+                                type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                                className="bg-cardBg border border-gray-700 rounded-full px-5 py-2 text-center text-sm font-bold w-full max-w-[200px] focus:outline-none focus:neon-border-theme transition-colors"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex px-5 mb-4 shrink-0 border-b border-gray-800">
+                        <button className={`flex-1 pb-3 text-sm font-bold transition-all ${activeTab === 'home' ? 'neon-text-theme border-b-2 neon-border-theme' : 'text-gray-500'}`} onClick={() => setActiveTab('home')}><i className="fas fa-home mr-1"></i> 寵物</button>
+                        <button className={`flex-1 pb-3 text-sm font-bold transition-all ${activeTab === 'skincare' ? 'neon-text-theme border-b-2 neon-border-theme' : 'text-gray-500'}`} onClick={() => setActiveTab('skincare')}><i className="fas fa-sparkles mr-1"></i> 保養</button>
+                        <button className={`flex-1 pb-3 text-sm font-bold transition-all ${activeTab === 'health' ? 'neon-text-theme border-b-2 neon-border-theme' : 'text-gray-500'}`} onClick={() => setActiveTab('health')}><i className="fas fa-heart-pulse mr-1"></i> 健康</button>
+                        <button className={`flex-1 pb-3 text-sm font-bold transition-all ${activeTab === 'diet' ? 'neon-text-theme border-b-2 neon-border-theme' : 'text-gray-500'}`} onClick={() => setActiveTab('diet')}><i className="fas fa-salad mr-1"></i> 飲食</button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto px-5 pb-4">
+                        {activeTab === 'home' && renderHome()}
+                        {activeTab === 'skincare' && renderSkincare()}
+                        {activeTab === 'health' && renderHealth()}
+                        {activeTab === 'diet' && renderDiet()}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
