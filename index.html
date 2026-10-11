@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Delicate Glow Up</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="./icon.jpg">
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        neonPink: 'var(--theme-color)',
+                        darkBg: '#0a0a0a',
+                        cardBg: '#1a1a1a',
+                        cardDark: '#121212'
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slight': 'bounceSlight 2s infinite',
+                        'heart-float': 'heartFloat 1s ease-out forwards'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: 1, filter: 'drop-shadow(0 0 10px var(--theme-color))' },
+                            '50%': { opacity: .7, filter: 'drop-shadow(0 0 25px var(--theme-color))' }
+                        },
+                        bounceSlight: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        },
+                        heartFloat: {
+                            '0%': { opacity: 1, transform: 'translateY(0) scale(1)' },
+                            '100%': { opacity: 0, transform: 'translateY(-40px) scale(1.5)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --theme-color: #ff2a85;
+            font-size: 16px; 
+        }
+        body { background-color: #0a0a0a; color: #fff; font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; transition: all 0.5s ease; user-select: none; }
+        
+        .text-xs { font-size: 0.85rem; line-height: 1.25rem; }
+        .text-sm { font-size: 1rem; line-height: 1.5rem; }
+        .text-base { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-lg { font-size: 1.25rem; line-height: 1.75rem; }
+        .text-xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-2xl { font-size: 1.75rem; line-height: 2.25rem; }
+        
+        .neon-text-light { color: var(--theme-color); text-shadow: 0 0 2px var(--theme-color), 0 0 4px var(--theme-color); transition: all 0.5s ease; }
+        .neon-border { border: 1px solid var(--theme-color); box-shadow: 0 0 3px var(--theme-color), inset 0 0 3px var(--theme-color); transition: all 0.5s ease; }
+        .neon-bg { background-color: var(--theme-color); box-shadow: 0 0 8px var(--theme-color); color: white; transition: all 0.5s ease; }
+        .neon-text-theme { color: var(--theme-color); transition: color 0.5s ease; }
+        .neon-border-theme { border-color: var(--theme-color); transition: border-color 0.5s ease; }
+        .neon-bg-theme { background-color: var(--theme-color); transition: background-color 0.5s ease; }
+        .shadow-theme { box-shadow: 0 0 10px var(--theme-color); }
+        .shadow-inset-theme { box-shadow: inset 0 0 5px rgba(0,0,0,1); }
+        .neon-btn { transition: all 0.2s ease-in-out; }
+        .neon-btn:active { transform: scale(0.95); }
+        ::-webkit-scrollbar { display: none; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) sepia(1) saturate(5) hue-rotate(300deg); display: none; } 
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #333; padding: 16px 8px; text-align: left; }
+        th { color: #aaa; font-size: 0.95rem; font-weight: 500; }
+        
+        .theme-morning { --theme-color: #ff6b9e; }
+        .theme-night { --theme-color: #b026ff; }
+        .theme-maxlevel { --theme-color: #00f0ff; }
+        
+        .autocomplete-list { position: absolute; z-index: 1000; background-color: #1a1a1a; border: 1px solid #333; border-radius: 6px; max-height: 200px; overflow-y: auto; width: calc(100% - 16px); margin-top: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); }
+        .autocomplete-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #222; font-size: 1rem; }
+        .autocomplete-item:hover { background-color: #333; }
+        .autocomplete-item span { color: #888; margin-left: 8px; font-size: 0.85rem; }
+        
+        input, select, button { font-family: 'Noto Sans TC', sans-serif; font-size: 1rem; }
+        
+        .swipe-container { touch-action: pan-y; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const QUOTES = [
+            "今天的你，比昨天更閃耀一點了嗎？",
+            "保養不是為了取悅別人，是為了自己的底氣。",
+            "喝水。護膚。愛自己。剩下的隨他去。",
+            "你的光芒，不需要任何人允許。",
+            "精緻是一種態度，與他人無關。",
+            "把時間花在自己身上，是最穩賺不賠的投資。",
+            "卸下疲憊，今晚只做最真實的自己。"
+        ];
+
+        const ICONS = [
+            { id: 'cleanser', icon: '🧼', name: '洗面乳' },
+            { id: 'toner', icon: '🧴', name: '化妝水' },
+            { id: 'serum', icon: '💧', name: '精華液' },
+            { id: 'eyecream', icon: '👁️', name: '眼霜' },
+            { id: 'lotion', icon: '🧴', name: '乳液/面霜' },
+            { id: 'sunscreen', icon: '🛡️', name: '防曬' },
+            { id: 'mask', icon: '🎭', name: '面膜' },
+            { id: 'oil', icon: '🧪', name: '保養油' },
+            { id: 'lipbalm', icon: '💄', name: '護唇膏' }
+        ];
+
+        const PETS = {
+            penguin: { name: '小企鵝', stages: ['🥚', '🐣', '🐧', '🐧❄️✨'], dialogues: ["咕嚕！", "今天好冷，要抱抱❄️", "一起發光吧！", "拍拍翅膀～", "最喜歡你了！"] },
+            bird: { name: '綠繡眼', stages: ['🥚', '🐣', '🐦', '🐦🌿✨'], dialogues: ["啾啾！", "今天也要開心喔🌿", "為你唱歌～", "蹭蹭你！", "飛高高！"] },
+            snail: { name: '小蝸牛', stages: ['🥚', '🌱', '🐌', '🐌🌈✨'], dialogues: ["慢慢來，比較快🐌", "我今天爬了5公分喔！", "你的努力我都看見了🌈", "蹭蹭～", "你好呀！"] },
+            sheep: { name: '小綿羊', stages: ['🥚', '🐑', '🐏', '🐑☁️✨'], dialogues: ["咩～", "像雲朵一樣柔軟☁️", "今天也很棒呢！", "好溫暖呀～", "要一起睡覺嗎？"] },
+            cat: { name: '星霓貓', stages: ['🥚', '🐱', '🐈', '😻✨'], dialogues: ["喵～", "呼嚕呼嚕...", "本喵今天也很滿意😻", "摸摸我的頭！", "只給你摸喔。"] },
+            dog: { name: '幻光犬', stages: ['🥚', '🐶', '🐕', '🥰✨'], dialogues: ["汪汪！", "最喜歡你了！🥰", "陪我玩陪我玩！", "搖尾巴～", "今天辛苦啦！"] }
+        };
+        
+        const FOOD_DB = [
+            { name: '白飯', calories: 280, unit: '一碗' },
+            { name: '糙米飯', calories: 250, unit: '一碗' },
+            { name: '紫米飯', calories: 260, unit: '一碗' },
+            { name: '滷肉飯', calories: 450, unit: '一碗' },
+            { name: '雞肉飯', calories: 400, unit: '一碗' },
+            { name: '控肉飯', calories: 700, unit: '一碗' },
+            { name: '排骨飯', calories: 850, unit: '一個' },
+            { name: '雞腿飯', calories: 800, unit: '一個' },
+            { name: '炒飯', calories: 700, unit: '一盤' },
+            { name: '炒麵', calories: 650, unit: '一盤' },
+            { name: '陽春麵', calories: 350, unit: '一碗' },
+            { name: '乾麵', calories: 400, unit: '一碗' },
+            { name: '麻醬麵', calories: 500, unit: '一碗' },
+            { name: '牛肉麵', calories: 650, unit: '一碗' },
+            { name: '大腸麵線', calories: 400, unit: '一碗' },
+            { name: '肉羹麵', calories: 500, unit: '一碗' },
+            { name: '水餃', calories: 60, unit: '一顆' },
+            { name: '鍋貼', calories: 75, unit: '一顆' },
+            { name: '小籠包', calories: 100, unit: '一顆' },
+            { name: '肉圓', calories: 350, unit: '一顆' },
+            { name: '蔥油餅', calories: 400, unit: '一份' },
+            { name: '蘿蔔糕', calories: 150, unit: '一片' },
+            { name: '蚵仔煎', calories: 500, unit: '一份' },
+            { name: '臭豆腐', calories: 550, unit: '一份' },
+            { name: '鹽酥雞', calories: 500, unit: '一份' },
+            { name: '炸雞排', calories: 650, unit: '一塊' },
+            { name: '烤香腸', calories: 250, unit: '一根' },
+            { name: '地瓜球', calories: 300, unit: '一份(10顆)' },
+            { name: '豬血糕', calories: 150, unit: '一串' },
+            { name: '皮蛋豆腐', calories: 150, unit: '一份' },
+            { name: '燙青菜', calories: 50, unit: '一盤' },
+            { name: '炒青菜', calories: 120, unit: '一盤' },
+            { name: '滷蛋', calories: 75, unit: '一顆' },
+            { name: '茶葉蛋', calories: 75, unit: '一顆' },
+            { name: '蛋餅', calories: 300, unit: '一份' },
+            { name: '起司蛋餅', calories: 400, unit: '一份' },
+            { name: '培根蛋餅', calories: 450, unit: '一份' },
+            { name: '薯餅', calories: 150, unit: '一片' },
+            { name: '蘿蔔糕加蛋', calories: 380, unit: '一份' },
+            { name: '三明治', calories: 350, unit: '一份' },
+            { name: '烤土司', calories: 150, unit: '一片(無抹醬)' },
+            { name: '厚片吐司(花生/奶酥)', calories: 350, unit: '一片' },
+            { name: '飯糰(傳統)', calories: 550, unit: '一個' },
+            { name: '漢堡', calories: 450, unit: '一個' },
+            { name: '卡啦雞腿堡', calories: 600, unit: '一個' },
+            { name: '燒餅', calories: 250, unit: '一個' },
+            { name: '油條', calories: 250, unit: '一根' },
+            { name: '燒餅油條', calories: 500, unit: '一套' },
+            { name: '水煮蛋', calories: 75, unit: '一顆' },
+            { name: '荷包蛋', calories: 90, unit: '一顆' },
+            { name: '炒蛋', calories: 120, unit: '一份' },
+            { name: '茶碗蒸', calories: 80, unit: '一個' },
+            { name: '燕麥片', calories: 130, unit: '一碗' },
+            { name: '麥片粥', calories: 200, unit: '一碗' },
+            { name: '和風沙拉', calories: 100, unit: '一盒' },
+            { name: '凱薩沙拉', calories: 250, unit: '一盒' },
+            { name: '雞胸肉', calories: 165, unit: '100g' },
+            { name: '地瓜(烤/蒸)', calories: 140, unit: '一條(中)' },
+            { name: '鮭魚生魚片', calories: 200, unit: '一份(5片)' },
+            { name: '鮪魚生魚片', calories: 150, unit: '一份(5片)' },
+            { name: '綜合握壽司', calories: 400, unit: '一盤(6貫)' },
+            { name: '花壽司', calories: 300, unit: '一份(4片)' },
+            { name: '鮭魚飯糰', calories: 180, unit: '一個' },
+            { name: '日式咖哩飯', calories: 750, unit: '一份' },
+            { name: '炸豬排咖哩飯', calories: 1100, unit: '一份' },
+            { name: '牛丼', calories: 700, unit: '一碗' },
+            { name: '親子丼', calories: 650, unit: '一碗' },
+            { name: '勝丼(豬排丼)', calories: 900, unit: '一碗' },
+            { name: '豚骨拉麵', calories: 800, unit: '一碗' },
+            { name: '醬油拉麵', calories: 600, unit: '一碗' },
+            { name: '味噌拉麵', calories: 700, unit: '一碗' },
+            { name: '炒烏龍麵', calories: 550, unit: '一盤' },
+            { name: '湯烏龍麵', calories: 400, unit: '一碗' },
+            { name: '蕎麥麵(冷)', calories: 300, unit: '一盤' },
+            { name: '天婦羅(綜合)', calories: 500, unit: '一份' },
+            { name: '炸蝦', calories: 150, unit: '一尾' },
+            { name: '章魚燒', calories: 350, unit: '一份(6顆)' },
+            { name: '大阪燒', calories: 600, unit: '一份' },
+            { name: '唐揚雞', calories: 450, unit: '一份' },
+            { name: '秋刀魚(烤)', calories: 300, unit: '一尾' },
+            { name: '鯖魚(烤)', calories: 400, unit: '一尾' },
+            { name: '關東煮(綜合)', calories: 250, unit: '一碗' },
+            { name: '味噌湯', calories: 50, unit: '一碗' },
+            { name: '毛豆', calories: 130, unit: '一小盤' },
+            { name: '石鍋拌飯', calories: 700, unit: '一鍋' },
+            { name: '辣炒年糕', calories: 500, unit: '一份' },
+            { name: '韓式炸雞(甜辣)', calories: 800, unit: '一份' },
+            { name: '泡菜豬肉鍋', calories: 550, unit: '一鍋' },
+            { name: '海鮮豆腐鍋', calories: 450, unit: '一鍋' },
+            { name: '部隊鍋', calories: 900, unit: '一鍋(單人)' },
+            { name: '大醬湯', calories: 350, unit: '一鍋' },
+            { name: '人蔘雞湯', calories: 750, unit: '一鍋' },
+            { name: '烤五花肉', calories: 600, unit: '一份' },
+            { name: '海鮮煎餅', calories: 650, unit: '一份' },
+            { name: '泡菜煎餅', calories: 550, unit: '一份' },
+            { name: '韓式飯捲', calories: 450, unit: '一條' },
+            { name: '炸醬麵(韓式)', calories: 700, unit: '一碗' },
+            { name: '辛拉麵', calories: 500, unit: '一包' },
+            { name: '辣炒春雞', calories: 650, unit: '一份' },
+            { name: '韓式泡菜', calories: 30, unit: '一小碟' },
+            { name: '肉醬義大利麵', calories: 650, unit: '一盤' },
+            { name: '白醬義大利麵', calories: 800, unit: '一盤' },
+            { name: '青醬義大利麵', calories: 700, unit: '一盤' },
+            { name: '清炒蛤蜊義大利麵', calories: 550, unit: '一盤' },
+            { name: '焗烤肉醬麵/飯', calories: 900, unit: '一份' },
+            { name: '瑪格麗特披薩', calories: 800, unit: '一個(小)' },
+            { name: '夏威夷披薩', calories: 900, unit: '一個(小)' },
+            { name: '牛排(沙朗 8oz)', calories: 600, unit: '一份(不含醬)' },
+            { name: '牛排(菲力 8oz)', calories: 450, unit: '一份(不含醬)' },
+            { name: '烤半雞', calories: 700, unit: '一份' },
+            { name: '美式漢堡(牛肉起司)', calories: 750, unit: '一個' },
+            { name: '炸薯條', calories: 350, unit: '一份(中)' },
+            { name: '麥克雞塊', calories: 280, unit: '一份(6塊)' },
+            { name: '洋蔥圈', calories: 300, unit: '一份' },
+            { name: '潛艇堡(雞肉)', calories: 350, unit: '一個(6吋)' },
+            { name: '潛艇堡(牛肉)', calories: 450, unit: '一個(6吋)' },
+            { name: '貝果', calories: 250, unit: '一個(無抹醬)' },
+            { name: '可頌', calories: 300, unit: '一個' },
+            { name: '法國麵包', calories: 150, unit: '一片' },
+            { name: '玉米濃湯', calories: 200, unit: '一碗' },
+            { name: '南瓜濃湯', calories: 180, unit: '一碗' },
+            { name: '番茄蔬菜湯', calories: 100, unit: '一碗' },
+            { name: '打拋豬肉飯', calories: 650, unit: '一份' },
+            { name: '綠咖哩雞', calories: 500, unit: '一碗(不含飯)' },
+            { name: '紅咖哩牛', calories: 550, unit: '一碗(不含飯)' },
+            { name: '月亮蝦餅', calories: 400, unit: '一份(半張)' },
+            { name: '泰式椒麻雞', calories: 600, unit: '一份' },
+            { name: '冬蔭功(泰式酸辣湯)', calories: 250, unit: '一碗' },
+            { name: '涼拌木瓜絲', calories: 120, unit: '一盤' },
+            { name: '泰式炒河粉(Pad Thai)', calories: 700, unit: '一盤' },
+            { name: '鳳梨炒飯', calories: 650, unit: '一盤' },
+            { name: '越南河粉(牛)', calories: 400, unit: '一碗' },
+            { name: '越南生春捲', calories: 150, unit: '一卷' },
+            { name: '越南法國麵包', calories: 550, unit: '一份' },
+            { name: '海南雞飯', calories: 600, unit: '一份' },
+            { name: '肉骨茶', calories: 450, unit: '一碗(含肉)' },
+            { name: '叻沙麵(Laksa)', calories: 750, unit: '一碗' },
+            { name: '沙嗲烤肉串', calories: 150, unit: '一串' },
+            { name: '小火鍋(原味/海鮮)', calories: 600, unit: '一鍋(不含飯)' },
+            { name: '小火鍋(麻辣/牛奶)', calories: 900, unit: '一鍋(不含飯)' },
+            { name: '貢丸湯', calories: 150, unit: '一碗' },
+            { name: '蛋花湯', calories: 80, unit: '一碗' },
+            { name: '紫菜湯', calories: 50, unit: '一碗' },
+            { name: '豬血湯', calories: 150, unit: '一碗' },
+            { name: '排骨酥湯', calories: 350, unit: '一碗' },
+            { name: '苦瓜排骨湯', calories: 200, unit: '一碗' },
+            { name: '香菇雞湯', calories: 250, unit: '一碗' },
+            { name: '麻油雞', calories: 500, unit: '一碗' },
+            { name: '羊肉爐', calories: 600, unit: '一碗(含料)' },
+            { name: '薑母鴨', calories: 650, unit: '一碗(含料)' },
+            { name: '水', calories: 0, unit: '一杯' },
+            { name: '美式咖啡', calories: 15, unit: '一杯(中)' },
+            { name: '拿鐵(無糖)', calories: 180, unit: '一杯(中)' },
+            { name: '卡布奇諾(無糖)', calories: 150, unit: '一杯(中)' },
+            { name: '焦糖瑪奇朵', calories: 280, unit: '一杯(中)' },
+            { name: '摩卡', calories: 350, unit: '一杯(中)' },
+            { name: '無糖綠茶', calories: 0, unit: '一杯(手搖)' },
+            { name: '無糖烏龍茶', calories: 0, unit: '一杯(手搖)' },
+            { name: '紅茶(全糖)', calories: 180, unit: '一杯(手搖)' },
+            { name: '奶茶(全糖)', calories: 450, unit: '一杯(手搖)' },
+            { name: '鮮奶茶(無糖)', calories: 150, unit: '一杯(手搖)' },
+            { name: '珍珠奶茶(全糖)', calories: 650, unit: '一杯(手搖)' },
+            { name: '無糖豆漿', calories: 120, unit: '一杯' },
+            { name: '微糖豆漿', calories: 160, unit: '一杯' },
+            { name: '米漿', calories: 250, unit: '一杯' },
+            { name: '全脂牛奶', calories: 150, unit: '一杯(240ml)' },
+            { name: '低脂牛奶', calories: 110, unit: '一杯(240ml)' },
+            { name: '燕麥奶', calories: 130, unit: '一杯(240ml)' },
+            { name: '優酪乳(原味)', calories: 180, unit: '一瓶(200ml)' },
+            { name: '柳橙汁', calories: 110, unit: '一杯(240ml)' },
+            { name: '蘋果汁', calories: 120, unit: '一杯(240ml)' },
+            { name: '可樂', calories: 140, unit: '一罐(330ml)' },
+            { name: '零卡可樂', calories: 0, unit: '一罐' },
+            { name: '雪碧', calories: 140, unit: '一罐(330ml)' },
+            { name: '啤酒', calories: 150, unit: '一罐(330ml)' },
+            { name: '紅酒', calories: 120, unit: '一杯(150ml)' },
+            { name: '巧克力', calories: 550, unit: '100g' },
+            { name: '洋芋片', calories: 500, unit: '一包(100g)' },
+            { name: '蘇打餅乾', calories: 150, unit: '一小包' },
+            { name: '爆米花(焦糖)', calories: 400, unit: '一份' },
+            { name: '布丁', calories: 110, unit: '一個' },
+            { name: '冰淇淋(香草)', calories: 250, unit: '一球' },
+            { name: '蛋捲冰淇淋', calories: 150, unit: '一支' },
+            { name: '蛋糕(起司/海綿)', calories: 350, unit: '一片' },
+            { name: '提拉米蘇', calories: 450, unit: '一片' },
+            { name: '千層蛋糕', calories: 400, unit: '一片' },
+            { name: '鬆餅(無果醬)', calories: 250, unit: '一份' },
+            { name: '馬卡龍', calories: 80, unit: '一顆' },
+            { name: '蛋黃酥', calories: 280, unit: '一顆' },
+            { name: '鳳梨酥', calories: 200, unit: '一顆' },
+            { name: '仙草蜜/愛玉', calories: 120, unit: '一碗' },
+            { name: '豆花(加料)', calories: 350, unit: '一碗' },
+            { name: '湯圓(包餡)', calories: 70, unit: '一顆' },
+            { name: '剉冰(加料)', calories: 400, unit: '一碗' },
+            { name: '蘋果', calories: 95, unit: '一顆(中)' },
+            { name: '香蕉', calories: 105, unit: '一根(中)' },
+            { name: '芭樂', calories: 150, unit: '一顆' },
+            { name: '奇異果', calories: 45, unit: '一顆' },
+            { name: '橘子', calories: 50, unit: '一顆' },
+            { name: '西瓜', calories: 60, unit: '一碗(切塊)' },
+            { name: '葡萄', calories: 70, unit: '一碗(10-15顆)' },
+            { name: '木瓜', calories: 60, unit: '一碗(切塊)' },
+            { name: '鳳梨', calories: 50, unit: '一碗(切塊)' },
+            { name: '火龍果', calories: 100, unit: '半顆' },
+            { name: '芒果', calories: 150, unit: '一顆' },
+            { name: '草莓', calories: 50, unit: '一碗(約10顆)' },
+            { name: '藍莓', calories: 80, unit: '一盒(100g)' },
+            { name: '水蜜桃', calories: 60, unit: '一顆' },
+            { name: '梨子', calories: 100, unit: '一顆' },
+            { name: '櫻桃', calories: 65, unit: '一碗(約15顆)' },
+            { name: '酪梨', calories: 250, unit: '半顆' }
+        ];
+
+        const EXP_PER_LEVEL = 20;
+        const MAX_LEVEL = 4;
+        const TABS = ['home', 'skincare', 'health', 'diet'];
+
+        const App = () => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const [date, setDate] = useState(todayStr);
+            const [activeTab, setActiveTab] = useState('home');
+            
+            const [themeClass, setThemeClass] = useState('');
+            const [quote, setQuote] = useState('');
+
+            const [lastActiveDate, setLastActiveDate] = useState(() => localStorage.getItem('glowUpLastActive') || '');
+            const [streak, setStreak] = useState(() => parseInt(localStorage.getItem('glowUpStreak')) || 0);
+
+            const [petType, setPetType] = useState(() => localStorage.getItem('glowUpPetType') || 'penguin');
+            const [petExps, setPetExps] = useState(() => {
+                const saved = localStorage.getItem('glowUpPetExps');
+                if (saved) return JSON.parse(saved);
+                const oldExp = parseInt(localStorage.getItem('glowUpPetExp')) || 0;
+                const currentPet = localStorage.getItem('glowUpPetType') || 'penguin';
+                return { penguin: currentPet === 'penguin' ? oldExp : 0, bird: currentPet === 'bird' ? oldExp : 0, snail: currentPet === 'snail' ? oldExp : 0, sheep: currentPet === 'sheep' ? oldExp : 0, cat: currentPet === 'cat' ? oldExp : 0, dog: currentPet === 'dog' ? oldExp : 0 };
+            });
+            
+            const [expNotice, setExpNotice] = useState('');
+            const [interactionMsg, setInteractionMsg] = useState('');
+            const [isInteracting, setIsInteracting] = useState(false);
+            const [hearts, setHearts] = useState([]);
+            const interactionTimerRef = useRef(null);
+
+            const [time, setTime] = useState('morning');
+            const [isEdit, setIsEdit] = useState(false);
+            const [routines, setRoutines] = useState(() => {
+                const saved = localStorage.getItem('glowUpRoutines');
+                return saved ? JSON.parse(saved) : { morning: [], evening: [] };
+            });
+            const [logs, setLogs] = useState(() => {
+                const saved = localStorage.getItem('glowUpLogs');
+                return saved ? JSON.parse(saved) : {};
+            });
+            const [healthProfile, setHealthProfile] = useState(() => {
+                const saved = localStorage.getItem('glowUpHealthProfile');
+                const parsed = saved ? JSON.parse(saved) : {};
+                return { gender: 'female', height: '', calorieGoal: '1500', ...parsed };
+            });
+
+            const handleGenderChange = (gender) => {
+                setHealthProfile(prev => {
+                    let newGoal = prev.calorieGoal;
+                    if (prev.calorieGoal === '1500' && gender === 'male') newGoal = '2000';
+                    if (prev.calorieGoal === '2000' && gender === 'female') newGoal = '1500';
+                    return { ...prev, gender, calorieGoal: newGoal };
+                });
+            };
+            const [healthLogs, setHealthLogs] = useState(() => {
+                const saved = localStorage.getItem('glowUpHealthLogs');
+                return saved ? JSON.parse(saved) : {};
+            });
+            const [dietLogs, setDietLogs] = useState(() => {
+                const saved = localStorage.getItem('glowUpDietLogs');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            const [activeFoodInputId, setActiveFoodInputId] = useState(null);
+            const [foodSuggestions, setFoodSuggestions] = useState([]);
+            
+            // Swipe state
+            const [touchStart, setTouchStart] = useState(null);
+            const [touchEnd, setTouchEnd] = useState(null);
+
+            const minSwipeDistance = 50;
+
+            useEffect(() => {
+                setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+                if (lastActiveDate !== todayStr) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    if (lastActiveDate !== yesterdayStr && lastActiveDate !== '') {
+                        setStreak(0);
+                    }
+                }
+            }, []);
+
+            useEffect(() => {
+                
+            const petKeys = Object.keys(PETS);
+            const currentPetIndex = petKeys.indexOf(petType);
+            const handleNextPet = (e) => { e.stopPropagation(); setPetType(petKeys[(currentPetIndex + 1) % petKeys.length]); };
+            const handlePrevPet = (e) => { e.stopPropagation(); setPetType(petKeys[(currentPetIndex - 1 + petKeys.length) % petKeys.length]); };
+
+            const currentPetExp = petExps[petType] || 0;
+                const currentLevel = Math.floor(currentPetExp / EXP_PER_LEVEL) + 1;
+                if (currentLevel >= MAX_LEVEL) {
+                    setThemeClass('theme-maxlevel');
+                } else {
+                    const hour = new Date().getHours();
+                    if (hour >= 6 && hour < 18) {
+                        setThemeClass('theme-morning');
+                    } else {
+                        setThemeClass('theme-night');
+                    }
+                }
+            }, [petExps, petType]);
+
+            useEffect(() => { localStorage.setItem('glowUpLastActive', lastActiveDate); }, [lastActiveDate]);
+            useEffect(() => { localStorage.setItem('glowUpStreak', streak.toString()); }, [streak]);
+            useEffect(() => { localStorage.setItem('glowUpPetType', petType); }, [petType]);
+            useEffect(() => { localStorage.setItem('glowUpPetExps', JSON.stringify(petExps)); }, [petExps]);
+            useEffect(() => { localStorage.setItem('glowUpRoutines', JSON.stringify(routines)); }, [routines]);
+            useEffect(() => { localStorage.setItem('glowUpLogs', JSON.stringify(logs)); }, [logs]);
+            useEffect(() => { localStorage.setItem('glowUpHealthProfile', JSON.stringify(healthProfile)); }, [healthProfile]);
+            useEffect(() => { localStorage.setItem('glowUpHealthLogs', JSON.stringify(healthLogs)); }, [healthLogs]);
+            useEffect(() => { localStorage.setItem('glowUpDietLogs', JSON.stringify(dietLogs)); }, [dietLogs]);
+
+            const recordActivity = () => {
+                if (lastActiveDate !== todayStr) {
+                    if (lastActiveDate !== '') {
+                        const yesterday = new Date();
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        if (lastActiveDate === yesterday.toISOString().split('T')[0]) {
+                            setStreak(prev => prev + 1);
+                        } else {
+                            setStreak(1);
+                        }
+                    } else {
+                        setStreak(1);
+                    }
+                    setLastActiveDate(todayStr);
+                }
+            };
+
+            const addExp = (amount, source) => {
+                setPetExps(prev => ({ ...prev, [petType]: (prev[petType] || 0) + amount }));
+                setExpNotice(`+${amount} EXP (${source})`);
+                setTimeout(() => setExpNotice(''), 2000);
+                recordActivity();
+            };
+
+            const handlePetInteract = () => {
+                const currentPetData = PETS[petType] || PETS['penguin'];
+                const randomMsg = currentPetData.dialogues[Math.floor(Math.random() * currentPetData.dialogues.length)];
+                setInteractionMsg(randomMsg);
+                setIsInteracting(true);
+                
+                const newHeart = { id: Date.now(), x: Math.random() * 40 - 20 };
+                setHearts(prev => [...prev, newHeart]);
+                setTimeout(() => { setHearts(prev => prev.filter(h => h.id !== newHeart.id)); }, 1000);
+
+                if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
+                interactionTimerRef.current = setTimeout(() => {
+                    setInteractionMsg('');
+                    setIsInteracting(false);
+                }, 2500);
+            };
+            
+            const changeDate = (days) => {
+                const d = new Date(date);
+                d.setDate(d.getDate() + days);
+                setDate(d.toISOString().split('T')[0]);
+            };
+
+            const moveItem = (index, direction) => {
+                if (direction === -1 && index === 0) return;
+                if (direction === 1 && index === routines[time].length - 1) return;
+                
+                const newRoutine = [...routines[time]];
+                const temp = newRoutine[index];
+                newRoutine[index] = newRoutine[index + direction];
+                newRoutine[index + direction] = temp;
+                
+                setRoutines(prev => ({ ...prev, [time]: newRoutine }));
+            };
+
+            const addItem = (iconItem) => {
+                const newItem = { id: Date.now().toString(), icon: iconItem.icon, name: iconItem.name, brand: '' };
+                setRoutines(prev => ({ ...prev, [time]: [...prev[time], newItem] }));
+            };
+            const updateBrand = (id, val) => {
+                setRoutines(prev => ({ ...prev, [time]: prev[time].map(item => item.id === id ? { ...item, brand: val } : item) }));
+            };
+            const deleteItem = (id) => {
+                setRoutines(prev => ({ ...prev, [time]: prev[time].filter(item => item.id !== id) }));
+            };
+            const toggleLog = (itemId) => {
+                setLogs(prev => {
+                    const dayLogs = prev[date] || { morning: [], evening: [] };
+                    const timeLogs = dayLogs[time] || [];
+                    const isCompleted = timeLogs.includes(itemId);
+                    const newTimeLogs = isCompleted ? timeLogs.filter(id => id !== itemId) : [...timeLogs, itemId];
+                    if (!isCompleted) addExp(2, '保養');
+                    return { ...prev, [date]: { ...dayLogs, [time]: newTimeLogs } };
+                });
+            };
+            
+            const updateHealthLog = (field, value) => {
+                setHealthLogs(prev => ({ ...prev, [date]: { ...(prev[date] || { weight: '', bodyFat: '' }), [field]: value } }));
+            };
+
+            const todayDiet = dietLogs[date] || [];
+            const addDietRow = () => {
+                const newItem = { id: Date.now().toString(), meal: '午餐', food: '', calories: '' };
+                setDietLogs(prev => ({ ...prev, [date]: [...(prev[date] || []), newItem] }));
+                addExp(3, '飲食');
+            };
+            
+            const handleFoodInputChange = (id, value) => {
+                setDietLogs(prev => ({ ...prev, [date]: (prev[date] || []).map(item => item.id === id ? { ...item, food: value } : item) }));
+                if (value.trim() !== '') {
+                    const matches = FOOD_DB.filter(food => food.name.includes(value)).slice(0, 8);
+                    setFoodSuggestions(matches);
+                    setActiveFoodInputId(id);
+                } else {
+                    setFoodSuggestions([]);
+                    setActiveFoodInputId(null);
+                }
+            };
+
+            const selectFoodSuggestion = (id, foodItem) => {
+                setDietLogs(prev => ({
+                    ...prev,
+                    [date]: (prev[date] || []).map(item => item.id === id ? { ...item, food: foodItem.name, calories: foodItem.calories.toString() } : item)
+                }));
+                setFoodSuggestions([]);
+                setActiveFoodInputId(null);
+            };
+            
+            const updateDietItem = (id, field, value) => {
+                setDietLogs(prev => ({ ...prev, [date]: (prev[date] || []).map(item => item.id === id ? { ...item, [field]: value } : item) }));
+            };
+            const deleteDietItem = (id) => {
+                setDietLogs(prev => ({ ...prev, [date]: (prev[date] || []).filter(item => item.id !== id) }));
+            };
+            const totalCalories = todayDiet.reduce((sum, item) => sum + (parseFloat(item.calories) || 0), 0);
+            const calGoal = parseFloat(healthProfile.calorieGoal) || 1500;
+            const calProgress = Math.min((totalCalories / calGoal) * 100, 100);
+            
+            const exportData = () => {
+                const data = {
+                    lastActiveDate, streak, petType, petExps, routines, logs, healthProfile, healthLogs, dietLogs
+                };
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", `GlowUp_Backup_${todayStr}.json`);
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                alert("備份已下載！請妥善保存檔案。");
+            };
+
+            const importData = (event) => {
+                const fileReader = new FileReader();
+                fileReader.readAsText(event.target.files[0], "UTF-8");
+                fileReader.onload = e => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if(data.streak !== undefined && data.petType !== undefined) {
+                            if(data.lastActiveDate) setLastActiveDate(data.lastActiveDate);
+                            if(data.streak !== undefined) setStreak(data.streak);
+                            if(data.petType) setPetType(data.petType);
+                            if(data.petExps) setPetExps(data.petExps);
+                            if(data.routines) setRoutines(data.routines);
+                            if(data.logs) setLogs(data.logs);
+                            if(data.healthProfile) setHealthProfile(data.healthProfile);
+                            if(data.healthLogs) setHealthLogs(data.healthLogs);
+                            if(data.dietLogs) setDietLogs(data.dietLogs);
+                            alert("資料還原成功！");
+                        } else {
+                            alert("檔案格式不正確。");
+                        }
+                    } catch(err) {
+                        alert("讀取檔案失敗。");
+                    }
+                };
+            };
+
+            const onTouchStart = (e) => {
+                setTouchEnd(null);
+                setTouchStart(e.targetTouches[0].clientX);
+            };
+
+            const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+            const onTouchEnd = () => {
+                if (!touchStart || !touchEnd) return;
+                const distance = touchStart - touchEnd;
+                const isLeftSwipe = distance > minSwipeDistance;
+                const isRightSwipe = distance < -minSwipeDistance;
+                
+                const currentIndex = TABS.indexOf(activeTab);
+                
+                if (isLeftSwipe && currentIndex < TABS.length - 1) {
+                    setActiveTab(TABS[currentIndex + 1]);
+                }
+                if (isRightSwipe && currentIndex > 0) {
+                    setActiveTab(TABS[currentIndex - 1]);
+                }
+            };
+
+            const handleContentClick = () => {
+                if (foodSuggestions.length > 0) {
+                    setFoodSuggestions([]);
+                    setActiveFoodInputId(null);
+                }
+            };
+
+            
+            const petKeys = Object.keys(PETS);
+            const currentPetIndex = petKeys.indexOf(petType);
+            const handleNextPet = (e) => { e.stopPropagation(); setPetType(petKeys[(currentPetIndex + 1) % petKeys.length]); };
+            const handlePrevPet = (e) => { e.stopPropagation(); setPetType(petKeys[(currentPetIndex - 1 + petKeys.length) % petKeys.length]); };
+
+            const currentPetExp = petExps[petType] || 0;
+            const level = Math.floor(currentPetExp / EXP_PER_LEVEL) + 1;
+            const currentExpInLevel = currentPetExp % EXP_PER_LEVEL;
+            const isMaxLevel = level >= MAX_LEVEL;
+            const displayLevel = isMaxLevel ? MAX_LEVEL : level;
+            const progress = isMaxLevel ? 100 : (currentExpInLevel / EXP_PER_LEVEL) * 100;
+            const stageIndex = isMaxLevel ? 3 : (level === 1 ? 0 : (level === 2 ? 1 : 2));
+            const currentPet = PETS[petType] || PETS['penguin'];
+            const petEmoji = currentPet.stages[stageIndex];
+            
+            const getPetSize = () => {
+                if (isMaxLevel) return 'text-9xl';
+                if (level === 3) return 'text-8xl';
+                if (level === 2) return 'text-7xl';
+                return 'text-6xl';
+            };
+
+            const getPetMood = () => {
+                const hour = new Date().getHours();
+                const isNight = hour >= 22 || hour < 5;
+                const hasLogsToday = (logs[todayStr] && (logs[todayStr].morning?.length > 0 || logs[todayStr].evening?.length > 0)) || 
+                                     (healthLogs[todayStr] && (healthLogs[todayStr].weight || healthLogs[todayStr].bodyFat)) ||
+                                     (dietLogs[todayStr] && dietLogs[todayStr].length > 0);
+
+                if (isMaxLevel) return '👑';
+                if (isNight) return '💤';
+                if (hasLogsToday) return '✨';
+                return '💭';
+            };
+
+            const todayHealth = healthLogs[date] || { weight: '', bodyFat: '' };
+            let bmi = '--';
+            if (healthProfile.height && todayHealth.weight) {
+                const h = parseFloat(healthProfile.height) / 100;
+                const w = parseFloat(todayHealth.weight);
+                if (h > 0 && w > 0) bmi = (w / (h * h)).toFixed(1);
+            }
+
+            const renderHome = () => (
+                <div className="animate-fade-in flex flex-col items-center min-h-full pt-2 pb-10" onClick={handleContentClick}>
+                    <div className="text-center px-4 mb-4">
+                        <p className="text-sm text-gray-400 font-light tracking-wider">"{quote}"</p>
+                    </div>
+
+                    <div className={`w-full bg-cardDark border border-gray-800 rounded-3xl p-6 pb-12 flex flex-col items-center relative overflow-hidden ${isMaxLevel ? 'shadow-theme' : 'shadow-[0_0_20px_rgba(255,255,255,0.02)]'}`}>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 neon-bg-theme rounded-full opacity-10 blur-3xl"></div>
+                        
+                        <div className="w-full flex justify-between items-center mb-4 z-10">
+                            <h2 className="text-gray-400 text-base font-bold"><i className="fas fa-paw neon-text-theme mr-2"></i>專屬夥伴</h2>
+                            {streak > 0 && (
+                                <div className="flex items-center text-sm font-bold bg-darkBg px-3 py-1 rounded-full border border-gray-800">
+                                    <span className="text-orange-500 mr-1 animate-bounce-slight">🔥</span> 
+                                    連續 <span className="neon-text-theme mx-1">{streak}</span> 天
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div 
+                            className="h-48 flex items-center justify-center z-10 mb-4 relative w-full cursor-pointer" 
+                            onClick={(e) => { e.stopPropagation(); handlePetInteract(); }}
+                            style={{ WebkitTapHighlightColor: 'transparent' }}
+                        >
+                            <div className={`absolute top-0 right-1/4 bg-cardBg border border-gray-700 rounded-full px-4 py-1.5 text-base shadow-lg z-20 ${interactionMsg ? 'neon-border-theme neon-text-theme animate-bounce font-bold' : 'animate-bounce-slight'}`}>
+                                {interactionMsg || getPetMood()}
+                            </div>
+                            
+                            {hearts.map(heart => (
+                                <div key={heart.id} className="absolute text-neonPink text-2xl animate-heart-float z-30" style={{ left: `calc(50% + ${heart.x}px)`, top: '30%' }}>❤️</div>
+                            ))}
+
+                            <div className={`transition-all duration-300 ${isInteracting ? 'scale-125 rotate-3' : ''} animate-float drop-shadow-2xl ${isMaxLevel ? 'animate-pulse-glow' : ''}`}>
+                                <span className={`${getPetSize()} select-none`}>{petEmoji}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="w-full z-10 mt-2">
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="font-black text-2xl text-white">
+                                    Lv. {displayLevel} 
+                                    <span className="text-lg font-bold neon-text-theme ml-2">{currentPet.name}</span>
+                                    {isMaxLevel && <span className="ml-2 text-sm bg-darkBg neon-border-theme px-2 py-0.5 rounded-full text-white">MAX 👑</span>}
+                                </span>
+                                {!isMaxLevel && <span className="text-sm text-gray-400 font-bold">{currentExpInLevel} / {EXP_PER_LEVEL} EXP</span>}
+                            </div>
+                            
+                            <div className="w-full bg-gray-900 rounded-full h-4 shadow-inset-theme">
+                                <div className="neon-bg-theme h-4 rounded-full transition-all duration-500 ease-out shadow-theme" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            
+                            <p className="text-center text-sm text-gray-400 mt-4 h-5">
+                                點擊摸摸牠吧！每次記錄，寵物也會長大喔！
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="w-full mt-4 bg-cardBg rounded-2xl p-4 border border-gray-800 flex flex-col items-center">
+                        <p className="text-sm text-gray-400 mb-3 text-center font-bold">切換寵物 (獨立培養)</p>
+                        <div className="flex items-center justify-between w-full px-4">
+                            <button onClick={handlePrevPet} className="w-10 h-10 rounded-full bg-darkBg border border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                                <i className="fas fa-chevron-left"></i>
+                            </button>
+                            
+                            <div className="flex flex-col items-center justify-center bg-black/40 border neon-border-theme shadow-theme rounded-xl p-4 w-32 relative">
+                                {(() => {
+                                    const thisExp = petExps[petType] || 0;
+                                    const thisLv = Math.floor(thisExp / EXP_PER_LEVEL) + 1;
+                                    const thisStage = thisLv >= MAX_LEVEL ? 3 : (thisLv === 1 ? 0 : (thisLv === 2 ? 1 : 2));
+                                    const pet = PETS[petType];
+                                    return (
+                                        <>
+                                            <span className="text-4xl mb-2">{pet.stages[thisStage]}</span>
+                                            <span className="text-base font-bold text-white">{pet.name}</span>
+                                            <span className="absolute top-2 right-2 text-xs font-bold text-gray-400">Lv.{thisLv >= MAX_LEVEL ? 'MAX' : thisLv}</span>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                            
+                            <button onClick={handleNextPet} className="w-10 h-10 rounded-full bg-darkBg border border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                                <i className="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="w-full mt-4 bg-darkBg border border-gray-800 rounded-2xl p-4 flex justify-between items-center">
+                        <div className="text-sm text-gray-400"><i className="fas fa-database mr-2"></i>資料備份與還原</div>
+                        <div className="flex space-x-2">
+                            <button onClick={exportData} className="bg-gray-800 text-gray-200 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-700 transition">匯出</button>
+                            <label className="bg-gray-800 text-gray-200 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-700 transition cursor-pointer">
+                                匯入
+                                <input type="file" accept=".json" onChange={importData} className="hidden" />
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderSkincare = () => {
+                const currentRoutine = routines[time] || [];
+                const currentLogs = (logs[date] && logs[date][time]) ? logs[date][time] : [];
+                return (
+                    <div className="flex flex-col min-h-full pb-10" onClick={handleContentClick}>
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="flex bg-cardBg rounded-full p-1 flex-1 mr-4">
+                                <button className={`flex-1 py-2.5 rounded-full font-bold text-base neon-btn ${time === 'morning' ? 'neon-bg-theme' : 'text-gray-400'}`} onClick={() => setTime('morning')}>早晨</button>
+                                <button className={`flex-1 py-2.5 rounded-full font-bold text-base neon-btn ${time === 'evening' ? 'neon-bg-theme' : 'text-gray-400'}`} onClick={() => setTime('evening')}>夜間</button>
+                            </div>
+                            <button onClick={() => setIsEdit(!isEdit)} className="neon-text-theme p-2 w-12 text-center bg-cardBg rounded-full border border-gray-800">
+                                {isEdit ? <i className="fas fa-check text-xl"></i> : <i className="fas fa-pen text-xl"></i>}
+                            </button>
+                        </div>
+                        {isEdit && (
+                            <div className="mb-6 bg-cardDark p-4 rounded-xl border border-gray-800 shadow-theme">
+                                <p className="text-sm text-gray-400 mb-3 text-center font-bold">點選下方圖示加入保養程序</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {ICONS.map(i => (
+                                        <button key={i.id} onClick={() => addItem(i)} className="flex flex-col items-center p-3 rounded-lg bg-cardBg border border-gray-800 hover:neon-border-theme active:neon-bg-theme transition-colors">
+                                            <span className="text-2xl mb-1">{i.icon}</span><span className="text-sm font-bold text-gray-300">{i.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <div className="flex-1 overflow-y-auto pb-10 space-y-3">
+                            {currentRoutine.length === 0 ? (
+                                <div className="text-center text-gray-500 mt-10 text-base font-bold">{isEdit ? "請選擇上方保養品加入清單" : "目前沒有設定，請點擊右上角編輯"}</div>
+                            ) : (
+                                currentRoutine.map((item, index) => {
+                                    const isCompleted = currentLogs.includes(item.id);
+                                    return (
+                                        <div key={item.id} className={`flex items-center p-4 rounded-xl transition-all ${isCompleted && !isEdit ? 'bg-black/30 border border-gray-600' : 'bg-cardBg border border-gray-800'}`}>
+                                            {isEdit && (
+                                                <div className="flex flex-col mr-2">
+                                                    <button onClick={() => moveItem(index, -1)} className={`p-1 ${index === 0 ? 'text-gray-700' : 'text-gray-400 hover:text-white'}`}><i className="fas fa-chevron-up"></i></button>
+                                                    <button onClick={() => moveItem(index, 1)} className={`p-1 ${index === currentRoutine.length-1 ? 'text-gray-700' : 'text-gray-400 hover:text-white'}`}><i className="fas fa-chevron-down"></i></button>
+                                                </div>
+                                            )}
+                                            <div className="text-3xl mr-4">{item.icon}</div>
+                                            <div className="flex-1">
+                                                <div className="font-bold text-lg">{item.name}</div>
+                                                {isEdit ? (
+                                                    <input type="text" placeholder="輸入品牌..." value={item.brand} onChange={(e) => updateBrand(item.id, e.target.value)} className="bg-darkBg text-sm px-3 py-2 rounded-lg mt-2 w-full text-white focus:outline-none focus:neon-border-theme border border-gray-700" />
+                                                ) : (
+                                                    <div className="text-sm text-gray-400 mt-1">{item.brand || '未設定品牌'}</div>
+                                                )}
+                                            </div>
+                                            {isEdit ? (
+                                                <button onClick={() => deleteItem(item.id)} className="ml-4 text-red-400 p-3 rounded-full bg-red-500/10"><i className="fas fa-trash text-base"></i></button>
+                                            ) : (
+                                                <button onClick={() => toggleLog(item.id)} className={`ml-4 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${isCompleted ? 'neon-bg-theme neon-border-theme text-white shadow-theme' : 'border-gray-600 text-transparent'}`}><i className="fas fa-check text-lg"></i></button>
+                                            )}
+                                        </div>
+                                    )
+                                })
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderHealth = () => (
+                <div className="animate-fade-in space-y-6" onClick={handleContentClick}>
+                    <div className="bg-cardBg p-5 rounded-2xl border border-gray-800">
+                        <h2 className="text-base font-bold text-gray-300 mb-5"><i className="fas fa-user mr-2 neon-text-theme"></i>基本資料 (共用)</h2>
+                        <div className="space-y-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg">性別</span>
+                                <div className="flex bg-darkBg border border-gray-700 rounded-lg p-1">
+                                    <button 
+                                        onClick={() => handleGenderChange('male')}
+                                        className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors ${healthProfile.gender === 'male' ? 'bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.8)]' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >男生</button>
+                                    <button 
+                                        onClick={() => handleGenderChange('female')}
+                                        className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors ${healthProfile.gender === 'female' ? 'neon-bg-theme text-white shadow-theme' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >女生</button>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg">身高 (cm)</span>
+                                <input type="number" placeholder="例如: 160" value={healthProfile.height} onChange={(e) => setHealthProfile({...healthProfile, height: e.target.value})} className="bg-darkBg w-28 text-right px-4 py-2.5 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-lg" />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg">每日熱量目標 (kcal)</span>
+                                <input type="number" placeholder="例如: 1500" value={healthProfile.calorieGoal} onChange={(e) => setHealthProfile({...healthProfile, calorieGoal: e.target.value})} className="bg-darkBg w-28 text-right px-4 py-2.5 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-lg" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-cardBg p-5 rounded-2xl border neon-border-theme shadow-theme">
+                        <h2 className="text-base font-bold text-gray-300 mb-5"><i className="fas fa-weight-scale mr-2 neon-text-theme"></i>今日數值 ({date})</h2>
+                        <div className="space-y-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg">體重 (kg)</span>
+                                <input type="number" value={todayHealth.weight} onChange={(e) => updateHealthLog('weight', e.target.value)} onBlur={(e) => { if(e.target.value) addExp(1, '體重'); }} className="bg-darkBg w-28 text-right px-4 py-2.5 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-lg" />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg">體脂率 (%)</span>
+                                <input type="number" value={todayHealth.bodyFat} onChange={(e) => updateHealthLog('bodyFat', e.target.value)} onBlur={(e) => { if(e.target.value) addExp(1, '體脂'); }} className="bg-darkBg w-28 text-right px-4 py-2.5 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-lg" />
+                            </div>
+                        </div>
+                        <div className="mt-6 pt-5 border-t border-gray-800 flex justify-between items-center">
+                            <span className="text-gray-400 text-lg">BMI 指數</span>
+                            <span className="text-3xl font-black neon-text-theme">{bmi}</span>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderDiet = () => (
+                <div className="animate-fade-in flex flex-col h-full" onClick={handleContentClick}>
+                    <div className="bg-cardBg rounded-2xl border border-gray-800 p-5 mb-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h2 className="text-base font-bold text-gray-300"><i className="fas fa-utensils mr-2 neon-text-theme"></i>今日飲食 ({date})</h2>
+                            <button onClick={addDietRow} className="neon-text-theme text-base font-bold border neon-border-theme px-4 py-1.5 rounded-full hover:neon-bg-theme hover:text-white transition-colors">
+                                <i className="fas fa-plus mr-1"></i> 新增
+                            </button>
+                        </div>
+                        <div className="overflow-visible">
+                            <table className="overflow-visible">
+                                <thead><tr><th className="w-[25%]">餐別</th><th className="w-[45%]">食物內容 (關鍵字)</th><th className="w-[20%] text-right">熱量</th><th className="w-[10%] text-center"></th></tr></thead>
+                                <tbody>
+                                    {todayDiet.map(item => (
+                                        <tr key={item.id}>
+                                            <td><select value={item.meal} onChange={(e) => updateDietItem(item.id, 'meal', e.target.value)} className="bg-darkBg text-white border border-gray-700 rounded-lg px-2 py-2.5 w-full text-sm focus:outline-none focus:neon-border-theme"><option>早餐</option><option>午餐</option><option>晚餐</option><option>點心</option><option>飲料</option></select></td>
+                                            <td className="relative">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="如: 蛋餅" 
+                                                    value={item.food} 
+                                                    onChange={(e) => handleFoodInputChange(item.id, e.target.value)} 
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="bg-darkBg text-white border border-gray-700 rounded-lg px-3 py-2.5 w-full text-sm focus:outline-none focus:neon-border-theme" 
+                                                />
+                                                {activeFoodInputId === item.id && foodSuggestions.length > 0 && (
+                                                    <div className="autocomplete-list shadow-theme">
+                                                        {foodSuggestions.map((food, idx) => (
+                                                            <div 
+                                                                key={idx} 
+                                                                className="autocomplete-item flex justify-between items-center"
+                                                                onClick={(e) => { e.stopPropagation(); selectFoodSuggestion(item.id, food); }}
+                                                            >
+                                                                <div>{food.name} <span className="text-xs">({food.unit})</span></div>
+                                                                <div className="neon-text-theme font-bold">{food.calories}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td><input type="number" placeholder="kcal" value={item.calories} onChange={(e) => updateDietItem(item.id, 'calories', e.target.value)} className="bg-darkBg text-white border border-gray-700 rounded-lg px-2 py-2.5 w-full text-sm text-right focus:outline-none focus:neon-border-theme" /></td>
+                                            <td className="text-center"><button onClick={() => deleteDietItem(item.id)} className="text-red-400/70 hover:text-red-400 p-2"><i className="fas fa-times text-lg"></i></button></td>
+                                        </tr>
+                                    ))}
+                                    {todayDiet.length === 0 && <tr><td colSpan="4" className="text-center text-gray-500 py-8 text-base font-bold">尚未記錄今日飲食</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-cardDark border neon-border-theme rounded-2xl p-5 flex flex-col mt-auto shadow-theme">
+                        <div className="flex justify-between items-end mb-2">
+                            <span className="font-bold text-gray-300 text-lg">今日總熱量</span>
+                            <div className="text-right">
+                                <span className="text-3xl font-black neon-text-theme">{totalCalories}</span>
+                                <span className="text-sm font-normal text-gray-400 ml-1">/ {calGoal} kcal</span>
+                            </div>
+                        </div>
+                        <div className="w-full bg-gray-900 rounded-full h-3 shadow-inset-theme mt-1">
+                            <div className={`h-3 rounded-full transition-all duration-500 ease-out shadow-theme ${calProgress > 100 ? 'bg-red-500 shadow-[0_0_10px_red]' : 'neon-bg-theme'}`} style={{ width: `${Math.min(calProgress, 100)}%` }}></div>
+                        </div>
+                        {calProgress > 100 && <p className="text-red-400 text-xs text-right mt-2">已超過目標熱量！</p>}
+                    </div>
+                </div>
+            );
+
+            return (
+                <div 
+                    className={`h-screen flex flex-col max-w-md mx-auto relative overflow-hidden bg-darkBg text-white swipe-container ${themeClass}`}
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                >
+                    {expNotice && (
+                        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 neon-bg-theme text-white px-5 py-2 rounded-full font-bold text-base shadow-theme animate-bounce">
+                            {expNotice}
+                        </div>
+                    )}
+
+                    <div className="p-5 pb-3 shrink-0">
+                        <h1 className="text-3xl font-black italic tracking-wider neon-text-light text-center mb-5">Delicate Glow Up</h1>
+                        
+                        <div className="flex justify-center items-center space-x-3">
+                            <button onClick={() => changeDate(-1)} className="w-10 h-10 rounded-full bg-cardBg border border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                                <i className="fas fa-chevron-left"></i>
+                            </button>
+                            
+                            <div className="relative">
+                                <div className="bg-cardBg border border-gray-700 rounded-full px-6 py-2.5 text-center text-base font-bold w-[160px] flex items-center justify-center neon-text-theme">
+                                    {date}
+                                </div>
+                                <input 
+                                    type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                            </div>
+                            
+                            <button onClick={() => changeDate(1)} className="w-10 h-10 rounded-full bg-cardBg border border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                                <i className="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex px-3 mb-4 shrink-0 border-b border-gray-800">
+                        <button className={`flex-1 pb-3 text-base font-bold transition-all ${activeTab === 'home' ? 'neon-text-theme border-b-2 neon-border-theme' : 'text-gray-500'}`} onClick={() => setActiveTab('home')}><i className="fas fa-home mr-1"></i> 寵物</button>
+                        <button className={`flex-1 pb-3 text-base font-bold transition-all ${activeTab === 'skincare' ? 'neon-text-theme border-b-2 neon-border-theme' : 'text-gray-500'}`} onClick={() => setActiveTab('skincare')}><i className="fas fa-sparkles mr-1"></i> 保養</button>
+                        <button className={`flex-1 pb-3 text-base font-bold transition-all ${activeTab === 'health' ? 'neon-text-theme border-b-2 neon-border-theme' : 'text-gray-500'}`} onClick={() => setActiveTab('health')}><i className="fas fa-heart-pulse mr-1"></i> 健康</button>
+                        <button className={`flex-1 pb-3 text-base font-bold transition-all ${activeTab === 'diet' ? 'neon-text-theme border-b-2 neon-border-theme' : 'text-gray-500'}`} onClick={() => setActiveTab('diet')}><i className="fas fa-salad mr-1"></i> 飲食</button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto px-5 pb-8">
+                        {activeTab === 'home' && renderHome()}
+                        {activeTab === 'skincare' && renderSkincare()}
+                        {activeTab === 'health' && renderHealth()}
+                        {activeTab === 'diet' && renderDiet()}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
