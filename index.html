@@ -11,16 +11,16 @@
     <title>Delicate Glow Up</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="./icon.jpg">
-    <!-- React & ReactDOM (固定版本) -->
+    <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
-    <!-- Babel (固定版本) -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
-    <!-- Tailwind CSS (固定版本) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
-    <!-- FontAwesome (免費圖示) -->
+    <!-- FontAwesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts: Noto Sans TC -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -137,7 +137,6 @@
         const { useState, useEffect, useRef } = React;
 
         /* ---------- 工具函式 ---------- */
-        // 本地日期字串 (避免 toISOString 的 UTC 偏移)
         const toLocalDateStr = (d = new Date()) => {
             const y = d.getFullYear();
             const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -151,7 +150,6 @@
         const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
-        // 安全讀寫 localStorage (資料損毀或隱私模式時不會白屏)
         const load = (key, fallback) => {
             try {
                 const raw = localStorage.getItem(key);
@@ -206,7 +204,6 @@
             dog: { name: '幻光犬', stages: ['🥚', '🐶', '🐕', '🥰✨'], dialogues: ["汪汪！", "最喜歡你了！🥰", "陪我玩陪我玩！", "搖尾巴～", "今天辛苦啦！"] }
         };
 
-        // [名稱, 熱量, 單位]
         const FOOD_DB = [
             ['白飯', 280, '一碗'], ['糙米飯', 250, '一碗'], ['紫米飯', 260, '一碗'], ['滷肉飯', 450, '一碗'],
             ['雞肉飯', 400, '一碗'], ['控肉飯', 700, '一碗'], ['排骨飯', 850, '一個'], ['雞腿飯', 800, '一個'],
@@ -271,7 +268,6 @@
             ['水蜜桃', 60, '一顆'], ['梨子', 100, '一顆'], ['櫻桃', 65, '一碗(約15顆)'], ['酪梨', 250, '半顆']
         ].map(([name, calories, unit]) => ({ name, calories, unit }));
 
-        // 升級所需累積 EXP: Lv1 起算, 最後一項為滿級門檻
         const LEVEL_STEPS = [0, 40, 120, 260];
         const getLevelInfo = (exp) => {
             let level = 1;
@@ -287,7 +283,6 @@
             };
         };
 
-        
         const TAB_DEFS = [
             { id: 'home', label: '寵物', icon: 'fa-paw' },
             { id: 'skincare', label: '保養', icon: 'fa-wand-magic-sparkles' },
@@ -349,6 +344,18 @@
             const [streak, setStreak] = useState(() => parseInt(loadRaw('glowUpStreak', '0')) || 0);
             const [lastBackup, setLastBackup] = useState(() => loadRaw('glowUpLastBackup', ''));
 
+            // 加入防錯保護機制：確保即便儲存損壞，依然會回傳正確的物件 {}
+            const [petNames, setPetNames] = useState(() => { const v = load('glowUpPetNames', {}); return isObj(v) ? v : {}; });
+            const [petAccessories, setPetAccessories] = useState(() => { const v = load('glowUpPetAccessories', {}); return isObj(v) ? v : {}; });
+            
+            const [isNaming, setIsNaming] = useState(false);
+            const [nameInput, setNameInput] = useState('');
+            
+            const [adventureStatus, setAdventureStatus] = useState('idle');
+            const [adventureCountdown, setAdventureCountdown] = useState(0);
+            const [adventureResult, setAdventureResult] = useState('');
+            const [lastAdventureDate, setLastAdventureDate] = useState(() => loadRaw('glowUpLastAdventure', ''));
+
             const [petType, setPetType] = useState(() => {
                 const t = loadRaw('glowUpPetType', 'penguin');
                 return PETS[t] ? t : 'penguin';
@@ -356,7 +363,6 @@
             const [petExps, setPetExps] = useState(() => {
                 const saved = load('glowUpPetExps', null);
                 if (isObj(saved)) return { ...ZERO_EXPS, ...saved };
-                // 舊版單一 EXP 的遷移
                 const oldExp = parseInt(loadRaw('glowUpPetExp', '0')) || 0;
                 const cur = loadRaw('glowUpPetType', 'penguin');
                 return { ...ZERO_EXPS, ...(PETS[cur] ? { [cur]: oldExp } : {}) };
@@ -383,7 +389,6 @@
             const [activeFoodInputId, setActiveFoodInputId] = useState(null);
             const [foodSuggestions, setFoodSuggestions] = useState([]);
 
-            // 滑動切頁: 使用 ref, 不會觸發重繪
             const touchRef = useRef(null);
 
             /* ----- 初始化 ----- */
@@ -395,6 +400,31 @@
                     if (lastActiveDate !== toLocalDateStr(y)) setStreak(0);
                 }
             }, []);
+
+            useEffect(() => {
+                let timer;
+                if (adventureStatus === 'exploring' && adventureCountdown > 0) {
+                    timer = setTimeout(() => {
+                        setAdventureCountdown(prev => prev - 1);
+                    }, 1000);
+                } else if (adventureStatus === 'exploring' && adventureCountdown === 0) {
+                    setAdventureStatus('finished');
+                    const loot = [
+                        "發現了【✨ 亮麗寶石】！對保養充滿了靈感！",
+                        "帶回了【🌿 蘆薈嫩葉】！可以敷保濕面膜喔～",
+                        "採集到了【🍓 活力莓果】！補充豐富維他命 C！",
+                        "撿到了【💎 幻光碎片】！感覺自己變得更精緻了！",
+                        "發現了【🥛 補水泉水】！提醒你要多喝水喔！",
+                        "聽到了大自然的悄悄話：『今天的你，真的很棒！』",
+                        "找到了【🍀 幸運草】！今天會有好運發生～",
+                        "遇到了一隻旅行的小青蛙，跟牠分享了保養心得！"
+                    ];
+                    const randLoot = loot[Math.floor(Math.random() * loot.length)];
+                    setAdventureResult(randLoot);
+                    addExp(5, '冒險尋寶');
+                }
+                return () => clearTimeout(timer);
+            }, [adventureStatus, adventureCountdown]);
 
             useEffect(() => {
                 const info = getLevelInfo(petExps[petType] || 0);
@@ -411,6 +441,9 @@
             usePersist('glowUpStreak', streak, true);
             usePersist('glowUpLastBackup', lastBackup, true);
             usePersist('glowUpPetType', petType, true);
+            usePersist('glowUpPetNames', petNames);
+            usePersist('glowUpPetAccessories', petAccessories);
+            usePersist('glowUpLastAdventure', lastAdventureDate, true);
             usePersist('glowUpPetExps', petExps);
             usePersist('glowUpRoutines', routines);
             usePersist('glowUpLogs', logs);
@@ -445,7 +478,6 @@
                 recordActivity();
             };
 
-            // 每天每個項目只給一次 EXP, 補記過去日期不給
             const rewardOnce = (key, amount, source) => {
                 if (date !== todayStr) return;
                 const done = rewardsRef.current[date] || [];
@@ -692,6 +724,26 @@
             };
 
             /* ----- 寵物顯示資料 ----- */
+            const biomes = {
+                penguin: { title: '冰雪城堡 ❄️🏔️', style: 'from-[#0b1b3d] to-[#113a5d] border-[#103f68]', decor: '🌨️✨' },
+                bird: { title: '森林派對 🌿🌳', style: 'from-[#0d3b2e] to-[#0f4d19] border-[#135a20]', decor: '🍃🎋' },
+                snail: { title: '奇幻花園 🌸🍄', style: 'from-[#1a0f3d] to-[#3a0d33] border-[#441144]', decor: '🏵️🌱' },
+                sheep: { title: '雲朵樂園 ☁️🎠', style: 'from-[#2e0854] to-[#4c123d] border-[#591655]', decor: '🌸☁️' },
+                cat: { title: '霓虹夜幕 🌌🌃', style: 'from-[#190d3d] to-[#3b0a6e] border-[#4a09a3]', decor: '⚡🌟' },
+                dog: { title: '宇宙探險 🚀☄️', style: 'from-[#051329] to-[#121c40] border-[#182354]', decor: '🌌🪐' }
+            };
+            const currentBiome = biomes[petType] || biomes.penguin;
+            const todayWater = healthLogs[todayStr]?.water || 0;
+            const currentDisplayWater = todayWater < 50 && todayWater > 0 ? todayWater * 250 : todayWater;
+            const currentWeightVal = parseFloat(healthLogs[todayStr]?.weight) || (weightPoints.length > 0 ? weightPoints[weightPoints.length-1].w : 0);
+            const wtGoal = currentWeightVal > 0 ? Math.round(currentWeightVal * 30) : 2000;
+            const statWater = Math.min(100, Math.round((currentDisplayWater / wtGoal) * 100)) || 0;
+            
+            const routineList = routines[time] || [];
+            const completedRoutines = logs[date]?.[time] || [];
+            const statBeauty = routineList.length > 0 ? Math.min(100, Math.round((completedRoutines.length / routineList.length) * 100)) : 0;
+            const statEnergy = Math.min(100, (todayDiet.length * 30) + 30);
+
             const exp = petExps[petType] || 0;
             const info = getLevelInfo(exp);
             const currentPet = PETS[petType] || PETS.penguin;
@@ -719,410 +771,169 @@
             };
 
             /* ================= 各分頁 ================= */
-            const renderHome = () => (
-                <div className="animate-fade-in flex flex-col items-center min-h-full pt-2 pb-10" onClick={handleContentClick}>
-                    <div className="text-center px-4 mb-4">
-                        <p className="text-sm text-gray-300 font-light tracking-wider">"{quote}"</p>
-                    </div>
-
-                    <div className={`w-full bg-cardDark border border-gray-800 rounded-3xl p-6 pb-12 flex flex-col items-center relative overflow-hidden ${info.isMax ? 'shadow-theme' : 'shadow-[0_0_20px_rgba(255,255,255,0.02)]'}`}>
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 neon-bg-theme rounded-full opacity-10 blur-3xl"></div>
-
-                        <div className="w-full flex justify-between items-center mb-4 z-10">
-                            <h2 className="text-gray-300 text-base font-bold"><i className="fas fa-paw neon-text-theme mr-2" aria-hidden="true"></i>專屬夥伴</h2>
-                            {streak > 0 && (
-                                <div className="flex items-center text-sm font-bold bg-darkBg px-3 py-1 rounded-full border border-gray-800">
-                                    <span className="text-orange-500 mr-1 animate-bounce-slight" aria-hidden="true">🔥</span>
-                                    連續 <span className="neon-text-theme mx-1">{streak}</span> 天
-                                </div>
-                            )}
-                        </div>
-
-                        <button
-                            type="button"
-                            aria-label={`摸摸${currentPet.name}`}
-                            className="h-48 flex items-center justify-center z-10 mb-4 relative w-full cursor-pointer bg-transparent border-0"
-                            onClick={(e) => { e.stopPropagation(); handlePetInteract(); }}
-                        >
-                            <div className={`absolute top-0 right-1/4 bg-cardBg border border-gray-700 rounded-full px-4 py-1.5 text-base shadow-lg z-20 ${interactionMsg ? 'neon-border-theme neon-text-theme animate-bounce font-bold' : 'animate-bounce-slight'}`}>
-                                {interactionMsg || getPetMood()}
-                            </div>
-
-                            {hearts.map(heart => (
-                                <div key={heart.id} className="absolute text-neonPink text-2xl animate-heart-float z-30" style={{ left: `calc(50% + ${heart.x}px)`, top: '30%' }} aria-hidden="true">❤️</div>
-                            ))}
-
-                            <div className={`transition-all duration-300 ${isInteracting ? 'scale-125 rotate-3' : ''} animate-float drop-shadow-2xl ${info.isMax ? 'animate-pulse-glow' : ''}`}>
-                                <span className={`${getPetSize()} select-none`}>{petEmoji}</span>
-                            </div>
-                        </button>
-
-                        <div className="w-full z-10 mt-2">
-                            <div className="flex justify-between items-end mb-2">
-                                <span className="font-black text-2xl text-white">
-                                    Lv. {info.level}
-                                    <span className="text-lg font-bold neon-text-theme ml-2">{currentPet.name}</span>
-                                    {info.isMax && <span className="ml-2 text-sm bg-darkBg neon-border-theme px-2 py-0.5 rounded-full text-white">MAX 👑</span>}
-                                </span>
-                                {!info.isMax && <span className="text-sm text-gray-300 font-bold">{info.into} / {info.need} EXP</span>}
-                            </div>
-
-                            <div className="w-full bg-gray-900 rounded-full h-4 shadow-inset-theme" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(info.progress)} aria-label="經驗值進度">
-                                <div className="neon-bg-theme h-4 rounded-full transition-all duration-500 ease-out shadow-theme" style={{ width: `${info.progress}%` }}></div>
-                            </div>
-
-                            <p className="text-center text-sm text-gray-300 mt-4">
-                                點擊摸摸牠吧！每天的記錄，寵物也會長大喔！
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="w-full mt-4 bg-cardBg rounded-2xl p-4 border border-gray-800 flex flex-col items-center">
-                        <p className="text-sm text-gray-300 mb-3 text-center font-bold">切換寵物 (獨立培養)</p>
-                        <div className="flex items-center justify-between w-full px-4">
-                            <button type="button" aria-label="上一隻寵物" onClick={handlePrevPet} className="w-11 h-11 rounded-full bg-darkBg border border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-300 hover:text-white transition-colors">
-                                <i className="fas fa-chevron-left" aria-hidden="true"></i>
-                            </button>
-
-                            <div className="flex flex-col items-center justify-center bg-black/40 border neon-border-theme shadow-theme rounded-xl p-4 w-32 relative">
-                                {(() => {
-                                    const pi = getLevelInfo(petExps[petType] || 0);
-                                    return (
-                                        <>
-                                            <span className="text-4xl mb-2">{currentPet.stages[pi.stageIndex]}</span>
-                                            <span className="text-base font-bold text-white">{currentPet.name}</span>
-                                            <span className="absolute top-2 right-2 text-xs font-bold text-gray-300">Lv.{pi.isMax ? 'MAX' : pi.level}</span>
-                                        </>
-                                    );
-                                })()}
-                            </div>
-
-                            <button type="button" aria-label="下一隻寵物" onClick={handleNextPet} className="w-11 h-11 rounded-full bg-darkBg border border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-300 hover:text-white transition-colors">
-                                <i className="fas fa-chevron-right" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="w-full mt-4 bg-darkBg border border-gray-800 rounded-2xl p-4">
-                        <div className="flex justify-between items-center">
-                            <div className="text-sm text-gray-300"><i className="fas fa-database mr-2" aria-hidden="true"></i>資料備份與還原</div>
-                            <div className="flex space-x-2">
-                                <button type="button" onClick={exportData} className="bg-gray-800 text-gray-100 px-3 py-2 rounded-lg text-sm font-bold hover:bg-gray-700 transition">匯出</button>
-                                <label className="bg-gray-800 text-gray-100 px-3 py-2 rounded-lg text-sm font-bold hover:bg-gray-700 transition cursor-pointer">
-                                    匯入
-                                    <input type="file" accept=".json,application/json" onChange={importData} className="sr-only" />
-                                </label>
-                            </div>
-                        </div>
-                        {needBackup && (
-                            <p className="text-sm text-amber-300 mt-3" role="status">
-                                {daysSinceBackup === null ? '還沒備份過喔，建議先匯出一份。' : `已經 ${daysSinceBackup} 天沒備份了，建議匯出一份。`}
-                            </p>
-                        )}
-                    </div>
-                </div>
-            );
-
-            const renderSkincare = () => {
-                const currentRoutine = routines[time] || [];
-                const currentLogs = (logs[date] && logs[date][time]) ? logs[date][time] : [];
-                return (
-                    <div className="animate-fade-in flex flex-col min-h-full pb-10" onClick={handleContentClick}>
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="flex bg-cardBg rounded-full p-1 flex-1 mr-4" role="group" aria-label="保養時段">
-                                <button type="button" aria-pressed={time === 'morning'} className={`flex-1 py-2.5 rounded-full font-bold text-base neon-btn ${time === 'morning' ? 'neon-bg-theme' : 'text-gray-300'}`} onClick={() => setTime('morning')}>早晨</button>
-                                <button type="button" aria-pressed={time === 'evening'} className={`flex-1 py-2.5 rounded-full font-bold text-base neon-btn ${time === 'evening' ? 'neon-bg-theme' : 'text-gray-300'}`} onClick={() => setTime('evening')}>夜間</button>
-                            </div>
-                            <button type="button" aria-label={isEdit ? '完成編輯' : '編輯保養清單'} onClick={() => setIsEdit(!isEdit)} className="neon-text-theme p-2 w-12 h-12 text-center bg-cardBg rounded-full border border-gray-800">
-                                {isEdit ? <i className="fas fa-check text-xl" aria-hidden="true"></i> : <i className="fas fa-pen text-xl" aria-hidden="true"></i>}
-                            </button>
-                        </div>
-                        {isEdit && (
-                            <div className="mb-6 bg-cardDark p-4 rounded-xl border border-gray-800 shadow-theme">
-                                <p className="text-sm text-gray-300 mb-3 text-center font-bold">點選下方圖示加入保養程序</p>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {ICONS.map(i => (
-                                        <button type="button" key={i.id} onClick={() => addItem(i)} className="flex flex-col items-center p-3 rounded-lg bg-cardBg border border-gray-800 hover:neon-border-theme active:neon-bg-theme transition-colors">
-                                            <span className="text-2xl mb-1" aria-hidden="true">{i.icon}</span><span className="text-sm font-bold text-gray-200">{i.name}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        <div className="flex-1 space-y-3">
-                            {currentRoutine.length === 0 ? (
-                                <div className="text-center text-gray-400 mt-10 text-base font-bold">{isEdit ? "請選擇上方保養品加入清單" : "目前沒有設定，請點擊右上角編輯"}</div>
-                            ) : (
-                                currentRoutine.map((item, index) => {
-                                    const isCompleted = currentLogs.includes(item.id);
-                                    return (
-                                        <div key={item.id} className={`flex items-center p-4 rounded-xl transition-all ${isCompleted && !isEdit ? 'bg-black/30 border border-gray-500' : 'bg-cardBg border border-gray-800'}`}>
-                                            {isEdit && (
-                                                <div className="flex flex-col mr-2">
-                                                    <button type="button" aria-label={`${item.name} 上移`} onClick={() => moveItem(index, -1)} className={`p-1 w-8 h-8 ${index === 0 ? 'text-gray-700' : 'text-gray-300 hover:text-white'}`}><i className="fas fa-chevron-up" aria-hidden="true"></i></button>
-                                                    <button type="button" aria-label={`${item.name} 下移`} onClick={() => moveItem(index, 1)} className={`p-1 w-8 h-8 ${index === currentRoutine.length - 1 ? 'text-gray-700' : 'text-gray-300 hover:text-white'}`}><i className="fas fa-chevron-down" aria-hidden="true"></i></button>
-                                                </div>
-                                            )}
-                                            <div className="text-3xl mr-4" aria-hidden="true">{item.icon}</div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="font-bold text-lg">{item.name}</div>
-                                                {isEdit ? (
-                                                    <input type="text" aria-label={`${item.name} 品牌`} placeholder="輸入品牌..." value={item.brand} onChange={(e) => updateBrand(item.id, e.target.value)} className="bg-darkBg text-sm px-3 py-2 rounded-lg mt-2 w-full text-white focus:outline-none focus:neon-border-theme border border-gray-700" />
-                                                ) : (
-                                                    <div className="text-sm text-gray-300 mt-1">{item.brand || '未設定品牌'}</div>
-                                                )}
-                                            </div>
-                                            {isEdit ? (
-                                                <button type="button" aria-label={`刪除 ${item.name}`} onClick={() => deleteItem(item.id)} className="ml-4 text-red-400 w-11 h-11 rounded-full bg-red-500/10"><i className="fas fa-trash text-base" aria-hidden="true"></i></button>
-                                            ) : (
-                                                <button type="button" aria-label={`${item.name} ${isCompleted ? '已完成' : '標記完成'}`} aria-pressed={isCompleted} onClick={() => toggleLog(item.id)} className={`ml-4 w-11 h-11 rounded-full flex items-center justify-center border-2 transition-all ${isCompleted ? 'neon-bg-theme neon-border-theme text-white shadow-theme' : 'border-gray-500 text-transparent'}`}><i className="fas fa-check text-lg" aria-hidden="true"></i></button>
-                                            )}
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                    </div>
-                );
-            };
-
-            const renderHealth = () => (
-                <div className="animate-fade-in space-y-6 pb-10" onClick={handleContentClick}>
-                    <div className="bg-cardBg p-5 rounded-2xl border border-gray-800">
-                        <h2 className="text-base font-bold text-gray-200 mb-5"><i className="fas fa-user mr-2 neon-text-theme" aria-hidden="true"></i>基本資料 (共用)</h2>
-                        <div className="space-y-5">
-                            <div className="flex items-center justify-between">
-                                <span className="text-lg" id="gender-label">性別</span>
-                                <div className="flex bg-darkBg border border-gray-700 rounded-lg p-1" role="group" aria-labelledby="gender-label">
-                                    <button type="button" aria-pressed={healthProfile.gender === 'male'}
-                                        onClick={() => handleGenderChange('male')}
-                                        className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors ${healthProfile.gender === 'male' ? 'bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.8)]' : 'text-gray-400 hover:text-gray-200'}`}
-                                    >男生</button>
-                                    <button type="button" aria-pressed={healthProfile.gender === 'female'}
-                                        onClick={() => handleGenderChange('female')}
-                                        className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors ${healthProfile.gender === 'female' ? 'neon-bg-theme text-white shadow-theme' : 'text-gray-400 hover:text-gray-200'}`}
-                                    >女生</button>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="height" className="text-lg">身高 (cm)</label>
-                                <input id="height" type="number" inputMode="decimal" placeholder="例如: 160" value={healthProfile.height} onChange={(e) => setHealthProfile({ ...healthProfile, height: e.target.value })} className="bg-darkBg w-28 text-right px-4 py-2.5 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-lg" />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="calorieGoal" className="text-lg">每日熱量目標 (kcal)</label>
-                                <input id="calorieGoal" type="number" inputMode="numeric" placeholder="例如: 1500" value={healthProfile.calorieGoal} onChange={(e) => setHealthProfile({ ...healthProfile, calorieGoal: e.target.value })} className="bg-darkBg w-28 text-right px-4 py-2.5 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-lg" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-cardBg p-5 rounded-2xl border neon-border-theme shadow-theme">
-                        <h2 className="text-base font-bold text-gray-200 mb-5"><i className="fas fa-weight-scale mr-2 neon-text-theme" aria-hidden="true"></i>今日數值 ({date})</h2>
-                        <div className="space-y-5">
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="weight" className="text-lg">體重 (kg)</label>
-                                <input id="weight" type="number" inputMode="decimal" step="0.1" value={todayHealth.weight} onChange={(e) => updateHealthLog('weight', e.target.value)} onBlur={(e) => { if (parseFloat(e.target.value) > 0) rewardOnce('weight', 1, '體重'); }} className="bg-darkBg w-28 text-right px-4 py-2.5 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-lg" />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="bodyFat" className="text-lg">體脂率 (%)</label>
-                                <input id="bodyFat" type="number" inputMode="decimal" step="0.1" value={todayHealth.bodyFat} onChange={(e) => updateHealthLog('bodyFat', e.target.value)} onBlur={(e) => { if (parseFloat(e.target.value) > 0) rewardOnce('bodyFat', 1, '體脂'); }} className="bg-darkBg w-28 text-right px-4 py-2.5 rounded-lg text-white border border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-lg" />
-                            </div>
-                        </div>
-                        <div className="mt-6 pt-5 border-t border-gray-800 flex justify-between items-center">
-                            <span className="text-gray-300 text-lg">BMI 指數</span>
-                            <span className="text-3xl font-black neon-text-theme">{bmi}</span>
-                        </div>
-                    </div>
-                    <div className="bg-cardBg p-5 rounded-2xl border border-gray-800">
-                        <h2 className="text-base font-bold text-gray-200 mb-4"><i className="fas fa-chart-line mr-2 neon-text-theme" aria-hidden="true"></i>體重趨勢 (最近 14 筆)</h2>
-                        {weightPoints.length >= 2
-                            ? <WeightChart points={weightPoints} />
-                            : <p className="text-sm text-gray-400 text-center py-4">記錄至少兩天的體重後，這裡會出現趨勢圖。</p>}
-                    </div>
-                </div>
-            );
-
-            const renderDiet = () => {
-                const water = parseInt(todayHealth.water) || 0;
-                const currentWeight = parseFloat(todayHealth.weight) || (weightPoints.length > 0 ? weightPoints[weightPoints.length-1].w : 0);
-                const WATER_GOAL_ML = currentWeight > 0 ? Math.round(currentWeight * 30) : 2000;
-                const displayWater = water < 50 && water > 0 ? water * 250 : water;
+            const renderHome = () => {
+                const currentCustomName = petNames[petType] || currentPet.name;
+                const activeAccessory = petAccessories[petType] || 'none';
                 
+                const unlockedAccessories = [
+                    { id: 'none', label: '裸跑 🚫', symbol: '' },
+                    ...(info.level >= 2 ? [{ id: 'sunglasses', label: '墨鏡 🕶️', symbol: '🕶️' }] : []),
+                    ...(info.level >= 3 ? [{ id: 'hat', label: '高帽 🎩', symbol: '🎩' }, { id: 'bow', label: '蝴蝶結 🎀', symbol: '🎀' }] : []),
+                    ...(info.isMax ? [{ id: 'crown', label: '皇冠 👑', symbol: '👑' }] : []),
+                    ...(streak >= 3 ? [{ id: 'backpack', label: '背包 🎒', symbol: '🎒' }] : []),
+                    ...(streak >= 7 ? [{ id: 'sparkles', label: '星光 ✨', symbol: '✨' }] : [])
+                ];
+
+                const handleRename = (e) => {
+                    e.stopPropagation();
+                    if (!isNaming) {
+                        setNameInput(currentCustomName);
+                        setIsNaming(true);
+                    } else {
+                        if (nameInput.trim()) {
+                            setPetNames(prev => ({ ...prev, [petType]: nameInput.trim() }));
+                        }
+                        setIsNaming(false);
+                    }
+                };
+
+                const startAdventure = () => {
+                    if (date !== todayStr) {
+                        showToast('只能在今天發送夥伴去探險喔！');
+                        return;
+                    }
+                    if (adventureStatus === 'exploring') return;
+                    setAdventureStatus('exploring');
+                    setAdventureCountdown(8);
+                };
+
+                const claimAdventureReward = () => {
+                    setAdventureStatus('idle');
+                    setAdventureResult('');
+                };
+
                 return (
-                    <div className="animate-fade-in flex flex-col min-h-full pb-10" onClick={handleContentClick}>
-                        <div className="bg-cardBg rounded-2xl border border-gray-800 p-5 mb-4 shadow-[0_0_15px_rgba(0,180,255,0.05)]">
-                            <div className="flex justify-between items-end mb-2">
-                                <h2 className="text-base font-bold text-gray-200"><i className="fas fa-droplet mr-2 text-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.8)]" aria-hidden="true"></i>喝水目標</h2>
-                                <div className="text-right">
-                                    <span className="text-3xl font-black text-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.5)]">{displayWater}</span>
-                                    <span className="text-sm font-normal text-gray-400 ml-1">/ {WATER_GOAL_ML} ml</span>
-                                </div>
-                            </div>
-                            
-                            <div className="w-full bg-gray-900 rounded-full h-3 shadow-inset-theme mt-1 mb-4" role="progressbar" aria-valuemin="0" aria-valuemax={WATER_GOAL_ML} aria-valuenow={displayWater}>
-                                <div className={`h-3 rounded-full transition-all duration-500 ease-out bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]`} style={{ width: `${Math.min((displayWater / WATER_GOAL_ML) * 100, 100)}%` }}></div>
-                            </div>
-                            
-                            <div className="flex justify-between items-center space-x-2">
-                                <button type="button" onClick={() => changeWater(250, displayWater, WATER_GOAL_ML)} className="flex-1 bg-darkBg border border-gray-700 hover:border-blue-500 text-gray-300 hover:text-blue-400 py-2 rounded-xl text-sm font-bold transition-all flex flex-col items-center">
-                                    <i className="fas fa-mug-hot mb-1"></i> + 250ml
-                                </button>
-                                <button type="button" onClick={() => changeWater(500, displayWater, WATER_GOAL_ML)} className="flex-1 bg-darkBg border border-gray-700 hover:border-blue-500 text-gray-300 hover:text-blue-400 py-2 rounded-xl text-sm font-bold transition-all flex flex-col items-center">
-                                    <i className="fas fa-bottle-water mb-1"></i> + 500ml
-                                </button>
-                                <button type="button" onClick={() => changeWater(-displayWater, displayWater, WATER_GOAL_ML)} className="w-12 h-[52px] bg-red-500/10 border border-red-500/30 hover:border-red-500 text-red-400 rounded-xl text-sm transition-all flex flex-col items-center justify-center">
-                                    <i className="fas fa-rotate-left"></i>
-                                </button>
-                            </div>
+                    <div className="animate-fade-in flex flex-col items-center min-h-full pt-2 pb-10" onClick={handleContentClick}>
+                        <div className="text-center px-4 mb-4">
+                            <p className="text-sm text-gray-300 font-light tracking-wider">"{quote}"</p>
                         </div>
 
-                        <div className="bg-cardBg rounded-2xl border border-gray-800 p-5 mb-4">
-                            <div className="flex justify-between items-center mb-3">
-                                <h2 className="text-base font-bold text-gray-200"><i className="fas fa-utensils mr-2 neon-text-theme" aria-hidden="true"></i>今日飲食 ({date})</h2>
-                                <button type="button" onClick={addDietRow} className="neon-text-theme text-base font-bold border neon-border-theme px-4 py-1.5 rounded-full hover:neon-bg-theme hover:text-white transition-colors">
-                                    <i className="fas fa-plus mr-1" aria-hidden="true"></i> 新增
-                                </button>
-                            </div>
+                        {/* 生態場景卡片 */}
+                        <div className={`w-full bg-gradient-to-b ${currentBiome.style} border-2 ${currentBiome.border} rounded-3xl p-5 pb-8 flex flex-col items-center relative overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)]`}>
+                            <div className="absolute top-2 left-3 text-lg opacity-40 select-none animate-pulse">{currentBiome.decor}</div>
+                            <div className="absolute top-2 right-3 text-lg opacity-40 select-none animate-pulse">{currentBiome.decor}</div>
+                            <div className="absolute top-4 left-1/4 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
 
-                            <div className="space-y-3">
-                                {todayDiet.map(item => {
-                                    const qty = item.qty ?? '1';
-                                    return (
-                                        <div key={item.id} className="bg-darkBg border border-gray-800 rounded-xl p-3">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <select aria-label="餐別" value={item.meal} onChange={(e) => patchDiet(item.id, { meal: e.target.value })} className="bg-cardBg text-white border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none">
-                                                    <option>早餐</option><option>午餐</option><option>晚餐</option><option>點心</option><option>飲料</option>
-                                                </select>
-                                                <button type="button" aria-label="刪除這筆飲食" onClick={() => deleteDietItem(item.id)} className="text-red-400 w-11 h-11 flex items-center justify-center"><i className="fas fa-times text-lg" aria-hidden="true"></i></button>
-                                            </div>
-
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    aria-label="食物內容"
-                                                    placeholder="輸入關鍵字，如: 蛋餅"
-                                                    value={item.food}
-                                                    onChange={(e) => handleFoodInputChange(item, e.target.value)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="bg-cardBg text-white border border-gray-700 rounded-lg px-3 py-2.5 w-full text-sm focus:outline-none focus:neon-border-theme"
-                                                />
-                                                {activeFoodInputId === item.id && foodSuggestions.length > 0 && (
-                                                    <div className="autocomplete-list shadow-theme" role="listbox">
-                                                        {foodSuggestions.map((food) => (
-                                                            <div
-                                                                key={food.name}
-                                                                role="option"
-                                                                className="autocomplete-item flex justify-between items-center"
-                                                                onClick={(e) => { e.stopPropagation(); selectFoodSuggestion(item, food); }}
-                                                            >
-                                                                <div>{food.name} <span>({food.unit})</span></div>
-                                                                <div className="neon-text-theme font-bold">{food.calories}</div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {item.base ? (
-                                                <p className="text-xs text-gray-400 mt-1">每份：{item.unit} · {item.base} kcal</p>
-                                            ) : null}
-
-                                            <div className="flex items-center justify-between mt-3 space-x-3">
-                                                <label className="flex items-center text-sm text-gray-300">
-                                                    份數
-                                                    <input type="number" inputMode="decimal" min="0" step="0.5" value={qty} onChange={(e) => handleQtyChange(item, e.target.value)} className="bg-cardBg text-white border border-gray-700 rounded-lg px-2 py-2 w-20 ml-2 text-sm text-right focus:outline-none focus:neon-border-theme" />
-                                                </label>
-                                                <label className="flex items-center text-sm text-gray-300">
-                                                    熱量
-                                                    <input type="number" inputMode="numeric" min="0" placeholder="kcal" value={item.calories} onChange={(e) => handleCaloriesChange(item, e.target.value)} className="bg-cardBg text-white border border-gray-700 rounded-lg px-2 py-2 w-24 ml-2 text-sm text-right focus:outline-none focus:neon-border-theme" />
-                                                </label>
-                                            </div>
+                            <div className="w-full flex justify-between items-center mb-4 z-10">
+                                <div className="flex items-center space-x-1">
+                                    {isNaming ? (
+                                        <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
+                                            <input 
+                                                type="text" 
+                                                maxLength={8}
+                                                value={nameInput} 
+                                                onChange={(e) => setNameInput(e.target.value)}
+                                                className="bg-black/60 text-white text-base px-2 py-1 rounded border border-blue-400 focus:outline-none w-24"
+                                            />
+                                            <button onClick={handleRename} className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-bold">確定</button>
                                         </div>
-                                    );
-                                })}
-                                {todayDiet.length === 0 && <div className="text-center text-gray-400 py-8 text-base font-bold">尚未記錄今日飲食</div>}
-                            </div>
-                        </div>
-
-                        <div className="bg-cardDark border neon-border-theme rounded-2xl p-5 flex flex-col mt-auto shadow-theme">
-                            <div className="flex justify-between items-end mb-2">
-                                <span className="font-bold text-gray-200 text-lg">今日總熱量</span>
-                                <div className="text-right">
-                                    <span className="text-3xl font-black neon-text-theme">{Math.round(totalCalories)}</span>
-                                    <span className="text-sm font-normal text-gray-300 ml-1">/ {calGoal} kcal</span>
+                                    ) : (
+                                        <div className="flex items-center space-x-1 bg-black/40 px-3 py-1.5 rounded-full border border-white/10">
+                                            <span className="font-extrabold text-white text-base">{currentCustomName}</span>
+                                            <button type="button" aria-label="重命名" onClick={handleRename} className="text-gray-400 hover:text-blue-400 ml-1 text-xs">
+                                                <i className="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                            <div className="w-full bg-gray-900 rounded-full h-3 shadow-inset-theme mt-1" role="progressbar" aria-valuemin="0" aria-valuemax={calGoal} aria-valuenow={Math.round(totalCalories)} aria-label="今日熱量進度">
-                                <div className={`h-3 rounded-full transition-all duration-500 ease-out ${isOver ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]' : 'neon-bg-theme shadow-theme'}`} style={{ width: `${barWidth}%` }}></div>
-                            </div>
-                            {isOver && <p className="text-amber-300 text-sm text-right mt-2">今天超過目標了，明天再慢慢調整就好。</p>}
-                        </div>
-                    </div>
-                );
-            };
-
-            return (
-                <div
-                    className={`app-shell flex flex-col max-w-md mx-auto relative overflow-hidden bg-darkBg text-white swipe-container ${themeClass}`}
-                    onTouchStart={onTouchStart}
-                    onTouchEnd={onTouchEnd}
-                >
-                    <div className="sr-only" role="status" aria-live="polite">{toast}</div>
-                    {toast && (
-                        <div aria-hidden="true" className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 neon-bg-theme text-white px-5 py-2 rounded-full font-bold text-base shadow-theme animate-bounce whitespace-nowrap">
-                            {toast}
-                        </div>
-                    )}
-
-                    <div className="p-5 pb-3 shrink-0">
-                        <h1 className="text-3xl font-black italic tracking-wider neon-text-light text-center mb-5">Delicate Glow Up</h1>
-
-                        <div className="flex justify-center items-center space-x-3">
-                            <button type="button" aria-label="前一天" onClick={() => changeDate(-1)} className="w-11 h-11 rounded-full bg-cardBg border border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-300 hover:text-white transition-colors">
-                                <i className="fas fa-chevron-left" aria-hidden="true"></i>
-                            </button>
-
-                            <div className="relative">
-                                <div className="bg-cardBg border border-gray-700 rounded-full px-6 py-2.5 text-center text-base font-bold w-[160px] flex items-center justify-center neon-text-theme">
-                                    {date}
-                                </div>
-                                <input
-                                    type="date" aria-label="選擇日期" value={date}
-                                    onChange={(e) => { if (e.target.value) setDate(e.target.value); }}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
+                                
+                                {streak > 0 && (
+                                    <div className="flex items-center text-xs font-bold bg-black/40 px-3 py-1.5 rounded-full border border-orange-500/30">
+                                        <span className="text-orange-400 mr-1 animate-bounce-slight" aria-hidden="true">🔥</span>
+                                        連續 <span className="text-orange-400 mx-1">{streak}</span> 天
+                                    </div>
+                                )}
                             </div>
 
-                            <button type="button" aria-label="後一天" onClick={() => changeDate(1)} className="w-11 h-11 rounded-full bg-cardBg border border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-300 hover:text-white transition-colors">
-                                <i className="fas fa-chevron-right" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                    </div>
+                            <div className="absolute top-12 left-1/2 transform -translate-x-1/2 text-[10px] text-white/30 tracking-widest font-bold uppercase z-10">
+                                BIOME: {currentBiome.title}
+                            </div>
 
-                    <div className="flex px-3 mb-4 shrink-0 border-b border-gray-800" role="tablist">
-                        {TAB_DEFS.map(t => (
                             <button
-                                key={t.id}
                                 type="button"
-                                role="tab"
-                                aria-selected={activeTab === t.id}
-                                className={`flex-1 pb-3 text-base font-bold transition-all ${activeTab === t.id ? 'neon-text-theme border-b-2 neon-border-theme' : 'text-gray-400'}`}
-                                onClick={() => setActiveTab(t.id)}
+                                aria-label={`摸摸 ${currentCustomName}`}
+                                className="h-44 flex items-center justify-center z-10 mb-2 relative w-full cursor-pointer bg-transparent border-0"
+                                onClick={(e) => { e.stopPropagation(); handlePetInteract(); }}
                             >
-                                <i className={`fas ${t.icon} mr-1`} aria-hidden="true"></i> {t.label}
+                                <div className={`absolute -top-1 right-1/4 bg-black/80 border border-white/20 rounded-full px-4 py-1.5 text-xs shadow-lg z-20 ${interactionMsg ? 'border-blue-400 text-blue-300 animate-bounce font-bold' : 'animate-bounce-slight'}`}>
+                                    {interactionMsg || getPetMood()}
+                                </div>
+
+                                {hearts.map(heart => (
+                                    <div key={heart.id} className="absolute text-neonPink text-2xl animate-heart-float z-30" style={{ left: `calc(50% + ${heart.x}px)`, top: '30%' }} aria-hidden="true">❤️</div>
+                                ))}
+
+                                <div className={`relative transition-all duration-300 ${isInteracting ? 'scale-125 rotate-3' : ''} animate-float drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] ${info.isMax ? 'animate-pulse-glow' : ''}`}>
+                                    <span className={`${getPetSize()} select-none z-10 relative`}>{petEmoji}</span>
+                                    
+                                    {activeAccessory !== 'none' && (
+                                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-[45%] text-4xl select-none z-20 filter drop-shadow">
+                                            {unlockedAccessories.find(a => a.id === activeAccessory)?.symbol}
+                                        </div>
+                                    )}
+                                </div>
                             </button>
-                        ))}
-                    </div>
 
-                    <div className="flex-1 overflow-y-auto px-5 pb-8" role="tabpanel">
-                        {activeTab === 'home' && renderHome()}
-                        {activeTab === 'skincare' && renderSkincare()}
-                        {activeTab === 'health' && renderHealth()}
-                        {activeTab === 'diet' && renderDiet()}
-                    </div>
-                </div>
-            );
-        };
+                            <div className="w-full z-10 mt-2">
+                                <div className="flex justify-between items-end mb-1">
+                                    <span className="font-black text-xl text-white">
+                                        Lv. {info.level}
+                                        <span className="text-xs font-normal text-white/50 ml-2">種族：{currentPet.name}</span>
+                                    </span>
+                                    {!info.isMax && <span className="text-xs text-white/60 font-bold">{info.into} / {info.need} EXP</span>}
+                                </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+                                <div className="w-full bg-black/50 rounded-full h-3 border border-white/10" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(info.progress)}>
+                                    <div className="bg-gradient-to-r from-blue-400 to-indigo-500 h-2.5 rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(96,165,250,0.8)]" style={{ width: `${info.progress}%` }}></div>
+                                </div>
+                            </div>
+
+                            <div className="w-full grid grid-cols-3 gap-2 mt-4 z-10 bg-black/40 p-2.5 rounded-2xl border border-white/5 backdrop-blur-sm">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs text-white/60 mb-0.5">💧 飽水度</span>
+                                    <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-blue-400 h-full rounded-full" style={{ width: `${statWater}%` }}></div>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-blue-300 mt-1">{statWater}%</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs text-white/60 mb-0.5">✨ 顏值感</span>
+                                    <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-pink-400 h-full rounded-full" style={{ width: `${statBeauty}%` }}></div>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-pink-300 mt-1">{statBeauty}%</span>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs text-white/60 mb-0.5">🍗 活力值</span>
+                                    <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-amber-400 h-full rounded-full" style={{ width: `${statEnergy}%` }}></div>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-amber-300 mt-1">{statEnergy}%</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {/* 特色：尋寶冒險 */}
+                        <div className="w-full mt-4 bg-cardBg border border-gray-800 rounded-2xl p-4 flex flex-col relative overflow-hidden shadow-md">
+                            <div className="flex justify-between items-center mb-2">
+                                <div className="flex flex-col">
+                                    <span className="text-base font-bold text-gray-200">
+                                        <i className="fas fa-compass text-amber-400 mr-2"></i>冒險探險
+                                    </span>
+                                    <span className="text-xs text-gray-400">派 {currentCustomName} 探索，隨機帶回驚喜 (每日 +5 EXP)</span>
+                                </div>
+                                {adventureStatus === 'idle' && (
+                                    <button 
+                                        onClick={startAdventure}
+                                        className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold px-4 py-2 rounded
