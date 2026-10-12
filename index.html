@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Glow Up">
+    <title>Delicate Glow Up</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="./icon.jpg">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'] },
+                    colors: {
+                        neonPink: 'var(--theme-color)',
+                        darkBg: '#0a0a0a',
+                        cardBg: '#1a1a1a',
+                        cardDark: '#121212'
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slight': 'bounceSlight 2s infinite',
+                        'heart-float': 'heartFloat 1s ease-out forwards',
+                        'fade-in': 'fadeIn 0.3s ease-out'
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-15px)' } },
+                        pulseGlow: { '0%, 100%': { opacity: 1, filter: 'drop-shadow(0 0 15px var(--theme-color))' }, '50%': { opacity: .7, filter: 'drop-shadow(0 0 35px var(--theme-color))' } },
+                        bounceSlight: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-5px)' } },
+                        heartFloat: { '0%': { opacity: 1, transform: 'translateY(0) scale(1)' }, '100%': { opacity: 0, transform: 'translateY(-50px) scale(1.8)' } },
+                        fadeIn: { '0%': { opacity: 0, transform: 'translateY(6px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root { --theme-color: #ff2a85; font-size: 16px; }
+        body { background-color: #0a0a0a; color: #fff; font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; transition: all 0.5s ease; user-select: none; -webkit-user-select: none; }
+        input, textarea, select { -webkit-user-select: text; user-select: text; }
+
+        .app-shell { height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+
+        .text-xs { font-size: 0.9rem; line-height: 1.3rem; }
+        .text-sm { font-size: 1.05rem; line-height: 1.5rem; }
+        .text-base { font-size: 1.15rem; line-height: 1.75rem; }
+        .text-lg { font-size: 1.35rem; line-height: 1.85rem; }
+        .text-xl { font-size: 1.6rem; line-height: 2.1rem; }
+        
+        .neon-text-light { color: var(--theme-color); text-shadow: 0 0 2px var(--theme-color), 0 0 4px var(--theme-color); transition: all 0.5s ease; }
+        .neon-border { border: 2px solid var(--theme-color); box-shadow: 0 0 4px var(--theme-color), inset 0 0 4px var(--theme-color); transition: all 0.5s ease; }
+        .neon-bg { background-color: var(--theme-color); box-shadow: 0 0 8px var(--theme-color); color: white; transition: all 0.5s ease; }
+        .neon-text-theme { color: var(--theme-color); transition: color 0.5s ease; }
+        .neon-border-theme { border-color: var(--theme-color); border-width: 2px; transition: border-color 0.5s ease; }
+        .neon-bg-theme { background-color: var(--theme-color); transition: background-color 0.5s ease; }
+        .shadow-theme { box-shadow: 0 0 12px var(--theme-color); }
+        .shadow-inset-theme { box-shadow: inset 0 0 6px rgba(0,0,0,1); }
+        .neon-btn { transition: all 0.2s ease-in-out; }
+        .neon-btn:active { transform: scale(0.96); }
+        ::-webkit-scrollbar { display: none; }
+        input[type="date"]::-webkit-calendar-picker-indicator { display: none; }
+
+        .theme-morning { --theme-color: #ff6b9e; }
+        .theme-night { --theme-color: #b026ff; }
+        .theme-maxlevel { --theme-color: #00f0ff; }
+
+        .autocomplete-list { position: absolute; left: 0; top: 100%; z-index: 1000; background-color: #1a1a1a; border: 2px solid #333; border-radius: 12px; max-height: 250px; overflow-y: auto; width: 100%; margin-top: 6px; box-shadow: 0 6px 12px rgba(0,0,0,0.7); }
+        .autocomplete-item { padding: 16px; cursor: pointer; border-bottom: 1px solid #333; font-size: 1.15rem; font-weight: bold; }
+        .autocomplete-item:hover { background-color: #333; }
+        .autocomplete-item span { color: #ccc; margin-left: 8px; font-size: 1rem; font-weight: normal; }
+
+        input, select, button { font-family: 'Noto Sans TC', sans-serif; font-size: 1.15rem; }
+        button:focus-visible, input:focus-visible, select:focus-visible, label:focus-within {
+            outline: 3px solid var(--theme-color); outline-offset: 3px;
+        }
+
+        .swipe-container { touch-action: pan-y; }
+
+        .min-tap-target { min-height: 54px; min-width: 54px; }
+        .input-tap-target { min-height: 52px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .animate-float, .animate-pulse-glow, .animate-bounce-slight, .animate-bounce, .animate-heart-float, .animate-fade-in { animation: none !important; }
+            * { transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const toLocalDateStr = (d = new Date()) => {
+            const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        };
+        const parseLocalDate = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+        const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+        const load = (key, fallback) => { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch { return fallback; } };
+        const loadRaw = (key, fallback) => { try { const raw = localStorage.getItem(key); return raw === null ? fallback : raw; } catch { return fallback; } };
+        const usePersist = (key, value, raw = false) => { useEffect(() => { try { localStorage.setItem(key, raw ? String(value) : JSON.stringify(value)); } catch {} }, [key, value, raw]); };
+        const normalizeRoutines = (r) => ({ morning: Array.isArray(r?.morning) ? r.morning : [], evening: Array.isArray(r?.evening) ? r.evening : [] });
+
+        const QUOTES = [
+            "今天的你，比昨天更閃耀一點了嗎？", "保養不是為了取悅別人，是為了自己的底氣。", "喝水。護膚。愛自己。剩下的隨他去。",
+            "你的光芒，不需要任何人允許。", "精緻是一種態度，與他人無關。", "把時間花在自己身上，是最穩賺不賠的投資。", "卸下疲憊，今晚只做最真實的自己。"
+        ];
+
+        /* --- Expanded Skincare Icons including generic options for custom input --- */
+        const ICONS = [
+            { id: 'cleanser', icon: '🧼', name: '洗臉清潔' }, { id: 'toner', icon: '🧴', name: '化妝水' }, { id: 'serum', icon: '💧', name: '精華液' },
+            { id: 'eyecream', icon: '👁️', name: '眼霜' }, { id: 'lotion', icon: '🧴', name: '乳液面霜' }, { id: 'sunscreen', icon: '🛡️', name: '防曬' },
+            { id: 'mask', icon: '🎭', name: '敷面膜' }, { id: 'oil', icon: '🧪', name: '保養油' }, { id: 'lipbalm', icon: '💄', name: '護唇膏' },
+            { id: 'med', icon: '💊', name: '吃藥/保健' }, { id: 'custom1', icon: '📝', name: '自訂項目1' }, { id: 'custom2', icon: '📝', name: '自訂項目2' }
+        ];
+
+        const PETS = {
+            penguin: { 
+                name: '小企鵝', personality: '好奇心旺盛 ❄️', stages: ['🥚', '🐣', '🐧', '🐧❄️✨'], titles: ['神祕的極地蛋', '破冰小萌新', '極地探險家', '暴雪守護者'],
+                dialogues: ["咕嚕！今天要去哪裡探險？", "今天好冷，要不要抱一個？❄️", "一起加油，讓今天閃閃發光吧！", "拍拍翅膀～ 覺得充滿力量！"],
+                interactions: { feed: { emoji: '🐟', dialogue: "（大嚼生魚片）NOM NOM... 冰冰涼涼超好吃！" }, play: { emoji: '🏂', dialogue: "「滑雪大衝刺！」⛷️ 看我表演雪地360度滑行！" }, clean: { emoji: '✨', dialogue: "在雪堆裡洗個冷水澡！羽毛閃閃發光！" }, talk: { emoji: '💬', dialogue: "咕嚕咕嚕！我覺得你今天特別棒喔！" }, rest: { emoji: '❄️', dialogue: "在雪堆裡縮成一個圓滾滾的球... 💤 晚安！" } },
+                gradient: 'from-blue-900/40 to-black', border: 'border-blue-500/40', glow: 'shadow-[0_0_30px_rgba(59,130,246,0.3)]', accent: 'text-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+            },
+            bird: { 
+                name: '綠繡眼', personality: '活潑開朗 🌿', stages: ['🥚', '🐣', '🐦', '🐦🌿✨'], titles: ['溫暖的林中蛋', '毛毛雛鳥', '林間吟遊羽', '森之精靈歌手'],
+                dialogues: ["啾啾！今天也是充滿希望的一天！", "要聽我唱歌嗎？🌿 啾—啾—♪", "蹭蹭你～ 你的氣味好舒服！", "飛高高！世界好大喔！"],
+                interactions: { feed: { emoji: '🌾', dialogue: "（雀躍啄食） 穀物和果實！最喜歡自然的味道 🌾" }, play: { emoji: '🪁', dialogue: "（圍著你打轉） 在你肩上飛來飛去，啾啾啾！" }, clean: { emoji: '💧', dialogue: "在淺水盆裡撲騰撲騰！洗乾淨準備唱歌啦！" }, talk: { emoji: '💬', dialogue: "啾啾！偷偷告訴你一個森林裡的秘密..." }, rest: { emoji: '🍃', dialogue: "把頭埋進翅膀裡... 窩在小巢睡著了 💤 啾..." } },
+                gradient: 'from-emerald-950/40 to-black', border: 'border-emerald-500/40', glow: 'shadow-[0_0_30px_rgba(16,185,129,0.3)]', accent: 'text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]'
+            },
+            snail: { 
+                name: '小蝸牛', personality: '佛系勵志 🌱', stages: ['🥚', '🌱', '🐌', '🐌🌈✨'], titles: ['微小的草叢蛋', '背殼小幼苗', '大地漫步者', '宇宙慢慢爬'],
+                dialogues: ["慢慢來，比較快。每一步都有意義 🐌", "今天我也努力爬了5公分喔！", "你的每一點進步，我都看在眼裡 🌈"],
+                interactions: { feed: { emoji: '🌱', dialogue: "（細嚼慢嚥） 鮮嫩的露水和綠葉 🌱 滿滿的養分！" }, play: { emoji: '🌈', dialogue: "（慢慢伸出觸角） 哇！是彩虹！跟你一起散步好開心。" }, clean: { emoji: '✨', dialogue: "幫我擦亮小殼了！現在我是閃亮亮蝸牛 🐌" }, talk: { emoji: '💬', dialogue: "我們不用跟別人比快，只要每天前進一點點就好。" }, rest: { emoji: '🌀', dialogue: "安靜地縮回殼裡，在夢裡慢慢旅行 💤..." } },
+                gradient: 'from-amber-950/40 to-black', border: 'border-amber-500/50', glow: 'shadow-[0_0_30px_rgba(245,158,11,0.25)]', accent: 'text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+            },
+            sheep: { 
+                name: '小綿羊', personality: '慵懶溫柔 ☁️', stages: ['🥚', '🐑', '🐏', '🐑☁️✨'], titles: ['軟綿羊毛蛋', '咩咩小毛球', '夢境守護者', '星空睡眠大師'],
+                dialogues: ["咩～ 今天也辛苦了，要不要休息一下？", "蓬蓬鬆鬆的，像天上的雲朵一樣 ☁️", "聽說努力的人，今晚都會做好夢喔。"],
+                interactions: { feed: { emoji: '🍀', dialogue: "「嚼嚼嚼...」 鮮甜的幸運草 🍀 感覺好幸福～" }, play: { emoji: '🧶', dialogue: "（歡樂地跳躍） 蹦蹦跳跳！跟毛線球一起翻滾！" }, clean: { emoji: '🫧', dialogue: "梳理羊毛... 現在變得像白雲一樣蓬鬆柔軟囉！☁️" }, talk: { emoji: '💬', dialogue: "咩～ 靠著我軟綿綿的毛，什麼煩惱都會消失的。" }, rest: { emoji: '💤', dialogue: "「呼啊—」 好睏喔，我們一起數小羊吧 💤" } },
+                gradient: 'from-fuchsia-950/40 to-black', border: 'border-fuchsia-500/40', glow: 'shadow-[0_0_30px_rgba(217,70,239,0.3)]', accent: 'text-fuchsia-300 shadow-[0_0_10px_rgba(217,70,239,0.5)]'
+            },
+            cat: { 
+                name: '星霓貓', personality: '傲嬌愛撒嬌 ✨', stages: ['🥚', '🐱', '🐈', '😻✨'], titles: ['星霓流光蛋', '哈氣小幼貓', '星霓喵皇', '宇宙守護神'],
+                dialogues: ["喵～ 你來了？（其實等了你很久）", "呼嚕呼嚕... 哼，這點程度的摸摸勉強及格啦。", "摸摸我的頭... 只能摸一下喔！"],
+                interactions: { feed: { emoji: '🐟', dialogue: "「哈嚙！」 星空魚罐罐🥫 味道...哼，還算可以啦！" }, play: { emoji: '🧶', dialogue: "（瘋狂撲騰） 「看我抓抓抓！」 貓柳草和毛線球賽高！" }, clean: { emoji: '👅', dialogue: "不用你洗，本喵自己會舔毛！... 好啦，幫我梳一下背。" }, talk: { emoji: '💬', dialogue: "喵。雖然我不常說，但... 我滿喜歡待在你旁邊的。" }, rest: { emoji: '💤', dialogue: "在最溫暖的角落蜷縮起來 💤 呼嚕呼嚕...夢裡有你。" } },
+                gradient: 'from-rose-950/40 to-black', border: 'border-rose-500/40', glow: 'shadow-[0_0_30px_rgba(244,63,94,0.4)]', accent: 'text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.5)]'
+            },
+            dog: { 
+                name: '幻光犬', personality: '熱情忠誠 ☀️', stages: ['🥚', '🐶', '🐕', '🥰✨'], titles: ['暖光粒子蛋', '拆家小毛頭', '幻光快樂犬', '星輝大守護'],
+                dialogues: ["汪汪！你終於回來了！超想你的！🐕", "最喜歡你了！🥰 轉圈圈、搖尾巴！", "今天辛苦啦！快讓我舔舔你的手！🐾"],
+                interactions: { feed: { emoji: '🍖', dialogue: "「嗷嗚！」 烤大骨頭 🍖 嚼得超起勁！搖尾巴！" }, play: { emoji: '🥎', dialogue: "（高興飛撲） 「球球！接飛盤！」 汪汪汪，再來一次！" }, clean: { emoji: '🛁', dialogue: "洗澎澎囉！甩水攻擊！💦 把你也弄得濕搭搭！" }, talk: { emoji: '💬', dialogue: "汪汪！不管發生什麼事，我都會永遠保護你喔！" }, rest: { emoji: '💤', dialogue: "趴在你的腳邊，把下巴擱著... 呼呼 💤 晚安汪！" } },
+                gradient: 'from-orange-950/40 to-black', border: 'border-orange-500/40', glow: 'shadow-[0_0_30px_rgba(249,115,22,0.3)]', accent: 'text-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.5)]'
+            }
+        };
+
+        /* --- Quick Food Categories for Elders --- */
+        const QUICK_FOODS = [
+            { id: 'q1', name: '白飯/麵/主食', calories: 300, icon: '🍚' },
+            { id: 'q2', name: '燙青菜/沙拉', calories: 100, icon: '🥗' },
+            { id: 'q3', name: '肉類/魚/蛋', calories: 250, icon: '🥩' },
+            { id: 'q4', name: '湯品(清湯)', calories: 80, icon: '🍲' },
+            { id: 'q5', name: '水果一份', calories: 60, icon: '🍎' },
+            { id: 'q6', name: '點心/餅乾', calories: 200, icon: '🍪' }
+        ];
+
+        const FOOD_DB = [
+            ['白飯', 280, '一碗'], ['糙米飯', 250, '一碗'], ['滷肉飯', 450, '一碗'], ['雞腿飯', 800, '一個'],
+            ['炒飯', 700, '一盤'], ['牛肉麵', 650, '一碗'], ['水餃', 60, '一顆'], ['鍋貼', 75, '一顆'],
+            ['蔥油餅', 400, '一份'], ['炸雞排', 650, '一塊'], ['燙青菜', 50, '一盤'], ['茶葉蛋', 75, '一顆'],
+            ['蛋餅', 300, '一份'], ['三明治', 350, '一份'], ['漢堡', 450, '一個'], ['水煮蛋', 75, '一顆'],
+            ['燕麥片', 130, '一碗'], ['地瓜(烤/蒸)', 140, '一條(中)'], ['鮭魚生魚片', 200, '一份(5片)'], 
+            ['日式咖哩飯', 750, '一份'], ['豚骨拉麵', 800, '一碗'], ['味噌湯', 50, '一碗'], ['海鮮煎餅', 650, '一份'],
+            ['肉醬義大利麵', 650, '一盤'], ['炸薯條', 350, '一份(中)'], ['小火鍋', 600, '一鍋'], ['水', 0, '一杯'],
+            ['美式咖啡', 15, '一杯(中)'], ['拿鐵(無糖)', 180, '一杯(中)'], ['無糖綠茶', 0, '一杯(手搖)'], 
+            ['珍珠奶茶(全糖)', 650, '一杯(手搖)'], ['無糖豆漿', 120, '一杯'], ['全脂牛奶', 150, '一杯(240ml)'],
+            ['蘋果', 95, '一顆(中)'], ['香蕉', 105, '一根(中)'], ['芭樂', 150, '一顆']
+        ].map(([name, calories, unit]) => ({ name, calories, unit }));
+
+        const LEVEL_STEPS = [0, 50, 150, 320];
+        const getLevelInfo = (exp) => {
+            let level = 1;
+            for (let i = 1; i < LEVEL_STEPS.length; i++) if (exp >= LEVEL_STEPS[i]) level = i + 1;
+            const isMax = level >= LEVEL_STEPS.length;
+            const base = LEVEL_STEPS[level - 1];
+            const need = isMax ? 0 : LEVEL_STEPS[level] - base;
+            const into = exp - base;
+            return { level, isMax, into, need, progress: isMax ? 100 : Math.min(100, (into / need) * 100), stageIndex: Math.min(level - 1, 3) };
+        };
+        
+        const TAB_DEFS = [
+            { id: 'home', label: '寵物', icon: 'fa-paw' }, { id: 'skincare', label: '日常', icon: 'fa-clipboard-check' },
+            { id: 'health', label: '健康', icon: 'fa-heart-pulse' }, { id: 'diet', label: '飲食', icon: 'fa-utensils' }
+        ];
+        const TABS = TAB_DEFS.map(t => t.id);
+        const ZERO_EXPS = Object.fromEntries(Object.keys(PETS).map(k => [k, 0]));
+        const DEFAULT_PROFILE = { gender: 'female', height: '', calorieGoal: '1500' };
+
+        const defaultMeal = () => {
+            const h = new Date().getHours();
+            if (h < 10) return '早餐'; if (h < 15) return '午餐'; if (h < 17) return '點心';
+            if (h < 21) return '晚餐'; return '點心';
+        };
+
+        const WeightChart = ({ points }) => {
+            const W = 320, H = 140, P = 20;
+            const ws = points.map(p => p.w); const min = Math.min(...ws), max = Math.max(...ws); const span = max - min || 1;
+            const x = (i) => P + (points.length === 1 ? 0 : (i * (W - 2 * P)) / (points.length - 1));
+            const y = (w) => H - P - ((w - min) / span) * (H - 2 * P);
+            const path = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(p.w).toFixed(1)}`).join(' ');
+            const first = points[0], last = points[points.length - 1];
+            return (
+                <div>
+                    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`體重趨勢圖，從 ${first.w} 到 ${last.w} 公斤`}>
+                        <path d={path} fill="none" stroke="var(--theme-color)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                        {points.map((p, i) => ( <circle key={p.date} cx={x(i)} cy={y(p.w)} r="5" fill="var(--theme-color)" /> ))}
+                    </svg>
+                    <div className="flex justify-between text-sm text-gray-300 mt-2 font-bold">
+                        <span>{first.date.slice(5)}</span> <span>最低 {min} / 最高 {max} kg</span> <span>{last.date.slice(5)}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const todayStr = toLocalDateStr();
+            const [date, setDate] = useState(todayStr);
+            const [activeTab, setActiveTab] = useState('home');
+            const [themeClass, setThemeClass] = useState('');
+            const [quote, setQuote] = useState('');
+            const [toast, setToast] = useState('');
+            const toastTimerRef = useRef(null);
+
+            const [lastActiveDate, setLastActiveDate] = useState(() => loadRaw('glowUpLastActive', ''));
+            const [streak, setStreak] = useState(() => parseInt(loadRaw('glowUpStreak', '0')) || 0);
+            const [lastBackup, setLastBackup] = useState(() => loadRaw('glowUpLastBackup', ''));
+
+            const [petType, setPetType] = useState(() => { const t = loadRaw('glowUpPetType', 'penguin'); return PETS[t] ? t : 'penguin'; });
+            const [petExps, setPetExps] = useState(() => {
+                const saved = load('glowUpPetExps', null);
+                if (isObj(saved)) return { ...ZERO_EXPS, ...saved };
+                const oldExp = parseInt(loadRaw('glowUpPetExp', '0')) || 0;
+                const cur = loadRaw('glowUpPetType', 'penguin');
+                return { ...ZERO_EXPS, ...(PETS[cur] ? { [cur]: oldExp } : {}) };
+            });
+
+            const [interactionMsg, setInteractionMsg] = useState('');
+            const [isInteracting, setIsInteracting] = useState(false);
+            const [hearts, setHearts] = useState([]);
+            const interactionTimerRef = useRef(null);
+
+            const [time, setTime] = useState('morning');
+            const [isEdit, setIsEdit] = useState(false);
+            const [routines, setRoutines] = useState(() => normalizeRoutines(load('glowUpRoutines', null)));
+            const [logs, setLogs] = useState(() => { const v = load('glowUpLogs', {}); return isObj(v) ? v : {}; });
+            const [healthProfile, setHealthProfile] = useState(() => { const v = load('glowUpHealthProfile', {}); return { ...DEFAULT_PROFILE, ...(isObj(v) ? v : {}) }; });
+            const [healthLogs, setHealthLogs] = useState(() => { const v = load('glowUpHealthLogs', {}); return isObj(v) ? v : {}; });
+            const [dietLogs, setDietLogs] = useState(() => { const v = load('glowUpDietLogs', {}); return isObj(v) ? v : {}; });
+            const [rewards, setRewards] = useState(() => { const v = load('glowUpRewards', {}); return isObj(v) ? v : {}; });
+            const rewardsRef = useRef(rewards);
+            const [activeFoodInputId, setActiveFoodInputId] = useState(null);
+            const [foodSuggestions, setFoodSuggestions] = useState([]);
+            
+            // New state for custom water input
+            const [customWaterInput, setCustomWaterInput] = useState('');
+            const [showCustomWaterInput, setShowCustomWaterInput] = useState(false);
+
+            const touchRef = useRef(null);
+
+            useEffect(() => {
+                setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+                if (lastActiveDate && lastActiveDate !== todayStr) {
+                    const y = new Date(); y.setDate(y.getDate() - 1);
+                    if (lastActiveDate !== toLocalDateStr(y)) setStreak(0);
+                }
+            }, []);
+
+            useEffect(() => {
+                const info = getLevelInfo(petExps[petType] || 0);
+                if (info.isMax) { setThemeClass('theme-maxlevel'); } 
+                else { const hour = new Date().getHours(); setThemeClass(hour >= 6 && hour < 18 ? 'theme-morning' : 'theme-night'); }
+            }, [petExps, petType]);
+
+            usePersist('glowUpLastActive', lastActiveDate, true); usePersist('glowUpStreak', streak, true); usePersist('glowUpLastBackup', lastBackup, true);
+            usePersist('glowUpPetType', petType, true); usePersist('glowUpPetExps', petExps); usePersist('glowUpRoutines', routines);
+            usePersist('glowUpLogs', logs); usePersist('glowUpHealthProfile', healthProfile); usePersist('glowUpHealthLogs', healthLogs);
+            usePersist('glowUpDietLogs', dietLogs); usePersist('glowUpRewards', rewards);
+
+            const showToast = (msg) => {
+                setToast(msg);
+                if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+                toastTimerRef.current = setTimeout(() => setToast(''), 2500);
+            };
+
+            const recordActivity = () => {
+                if (lastActiveDate === todayStr) return;
+                const y = new Date(); y.setDate(y.getDate() - 1);
+                if (lastActiveDate && lastActiveDate === toLocalDateStr(y)) setStreak(prev => prev + 1); else setStreak(1);
+                setLastActiveDate(todayStr);
+            };
+
+            const addExp = (amount, source) => {
+                setPetExps(prev => ({ ...prev, [petType]: (prev[petType] || 0) + amount }));
+                showToast(`+${amount} EXP (${source})`);
+                recordActivity();
+            };
+
+            const rewardOnce = (key, amount, source) => {
+                const done = rewardsRef.current[date] || [];
+                if (done.includes(key)) return;
+                const next = { ...rewardsRef.current, [date]: [...done, key] };
+                rewardsRef.current = next; setRewards(next); addExp(amount, source);
+            };
+
+            const petKeys = Object.keys(PETS); const currentPetIndex = petKeys.indexOf(petType);
+            const handleNextPet = (e) => { e.stopPropagation(); setPetType(petKeys[(currentPetIndex + 1) % petKeys.length]); };
+            const handlePrevPet = (e) => { e.stopPropagation(); setPetType(petKeys[(currentPetIndex - 1 + petKeys.length) % petKeys.length]); };
+
+            const handlePetInteract = () => {
+                const data = PETS[petType] || PETS.penguin;
+                setInteractionMsg(data.dialogues[Math.floor(Math.random() * data.dialogues.length)]);
+                setIsInteracting(true);
+                const newHeart = { id: uid(), x: Math.random() * 60 - 30, emoji: '❤️' };
+                setHearts(prev => [...prev, newHeart]);
+                setTimeout(() => setHearts(prev => prev.filter(h => h.id !== newHeart.id)), 1200);
+                if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
+                interactionTimerRef.current = setTimeout(() => { setInteractionMsg(''); setIsInteracting(false); }, 3000);
+            };
+
+            const playInteract = (actionType) => {
+                if (isInteracting) return; 
+                const data = PETS[petType] || PETS.penguin;
+                const act = data.interactions[actionType];
+                if (!act) return;
+                
+                setInteractionMsg(act.dialogue); setIsInteracting(true);
+                const emojiToUse = act.emoji;
+                const particles = Array.from({ length: 5 }).map((_, idx) => ({
+                    id: uid() + idx, x: (Math.random() * 100 - 50), y: (Math.random() * -40 - 10), emoji: emojiToUse
+                }));
+                
+                setHearts(prev => [...prev, ...particles]);
+                particles.forEach(p => { setTimeout(() => setHearts(prev => prev.filter(h => h.id !== p.id)), 1200); });
+
+                const sourceNames = { feed: '餵食', play: '特技', clean: '洗香香', talk: '聊天', rest: '休息' };
+                rewardOnce(`petbond:${petType}:${actionType}`, 2, `與夥伴 ${sourceNames[actionType]} 互動`);
+
+                if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
+                interactionTimerRef.current = setTimeout(() => { setInteractionMsg(''); setIsInteracting(false); }, 4000);
+            };
+
+            const changeDate = (days) => { const d = parseLocalDate(date); d.setDate(d.getDate() + days); setDate(toLocalDateStr(d)); };
+
+            const moveItem = (index, direction) => {
+                const list = routines[time]; const target = index + direction;
+                if (target < 0 || target >= list.length) return;
+                const next = [...list]; [next[index], next[target]] = [next[target], next[index]];
+                setRoutines(prev => ({ ...prev, [time]: next }));
+            };
+            const addItem = (iconItem) => { 
+                const isCustom = iconItem.id.startsWith('custom');
+                const newItemName = isCustom ? '新項目' : iconItem.name;
+                const newItem = { id: uid(), icon: iconItem.icon, name: newItemName, brand: '', isCustom }; 
+                setRoutines(prev => ({ ...prev, [time]: [...prev[time], newItem] })); 
+            };
+            const updateItemProp = (id, prop, val) => { 
+                setRoutines(prev => ({ ...prev, [time]: prev[time].map(item => item.id === id ? { ...item, [prop]: val } : item) })); 
+            };
+            const deleteItem = (id) => { setRoutines(prev => ({ ...prev, [time]: prev[time].filter(item => item.id !== id) })); };
+            const toggleLog = (itemId) => {
+                const dayLogs = logs[date] || { morning: [], evening: [] }; const timeLogs = dayLogs[time] || [];
+                const isCompleted = timeLogs.includes(itemId);
+                const next = isCompleted ? timeLogs.filter(id => id !== itemId) : [...timeLogs, itemId];
+                setLogs(prev => ({ ...prev, [date]: { ...dayLogs, [time]: next } }));
+                if (!isCompleted) rewardOnce(`skin:${time}:${itemId}`, 2, '完成日常任務');
+            };
+
+            const handleGenderChange = (gender) => {
+                setHealthProfile(prev => {
+                    let newGoal = prev.calorieGoal;
+                    if (prev.calorieGoal === '1500' && gender === 'male') newGoal = '2000';
+                    if (prev.calorieGoal === '2000' && gender === 'female') newGoal = '1500';
+                    return { ...prev, gender, calorieGoal: newGoal };
+                });
+            };
+            const todayHealth = { weight: '', bodyFat: '', water: 0, ...(healthLogs[date] || {}) };
+            const updateHealthLog = (field, value) => { setHealthLogs(prev => ({ ...prev, [date]: { weight: '', bodyFat: '', water: 0, ...(prev[date] || {}), [field]: value } })); };
+            const changeWater = (delta, currentDisplayWater, goal) => { const next = Math.max(0, currentDisplayWater + delta); updateHealthLog('water', next); if (next >= goal) rewardOnce('water', 3, '喝水達標'); };
+            
+            const handleCustomWaterSubmit = (e, currentDisplayWater, goal) => {
+                e.preventDefault();
+                const amount = parseInt(customWaterInput);
+                if (!isNaN(amount) && amount > 0) {
+                    changeWater(amount, currentDisplayWater, goal);
+                    setCustomWaterInput('');
+                    setShowCustomWaterInput(false);
+                }
+            };
+
+            let bmi = '--';
+            if (healthProfile.height && todayHealth.weight) {
+                const h = parseFloat(healthProfile.height) / 100; const w = parseFloat(todayHealth.weight);
+                if (h > 0 && w > 0) bmi = (w / (h * h)).toFixed(1);
+            }
+            const weightPoints = Object.keys(healthLogs).sort().map(d => ({ date: d, w: parseFloat(healthLogs[d]?.weight) })).filter(p => p.w > 0).slice(-14);
+
+            const todayDiet = dietLogs[date] || [];
+            const patchDiet = (id, patch) => { setDietLogs(prev => ({ ...prev, [date]: (prev[date] || []).map(it => it.id === id ? { ...it, ...patch } : it) })); };
+            const checkDietReward = (item) => { if ((item.food || '').trim() && parseFloat(item.calories) > 0) rewardOnce(`diet:${item.id}`, 3, '飲食紀錄'); };
+            
+            const addDietRow = () => { const newItem = { id: uid(), meal: defaultMeal(), food: '', qty: '1', unit: '', base: null, calories: '' }; setDietLogs(prev => ({ ...prev, [date]: [...(prev[date] || []), newItem] })); };
+            const addQuickDietRow = (foodObj) => {
+                const newItem = { id: uid(), meal: defaultMeal(), food: foodObj.name, qty: '1', unit: '份', base: foodObj.calories, calories: String(foodObj.calories) };
+                setDietLogs(prev => ({ ...prev, [date]: [...(prev[date] || []), newItem] }));
+                checkDietReward(newItem);
+            };
+
+            const handleFoodInputChange = (item, value) => {
+                patchDiet(item.id, { food: value, base: null, unit: '' });
+                if (value.trim() !== '') { setFoodSuggestions(FOOD_DB.filter(f => f.name.includes(value)).slice(0, 8)); setActiveFoodInputId(item.id); } 
+                else { setFoodSuggestions([]); setActiveFoodInputId(null); }
+            };
+            const selectFoodSuggestion = (item, food) => {
+                const qty = parseFloat(item.qty) > 0 ? item.qty : '1';
+                const patch = { food: food.name, unit: food.unit, base: food.calories, qty, calories: String(Math.round(food.calories * parseFloat(qty))) };
+                patchDiet(item.id, patch); checkDietReward({ ...item, ...patch }); setFoodSuggestions([]); setActiveFoodInputId(null);
+            };
+            const handleQtyChange = (item, value) => { const patch = { qty: value }; if (item.base) patch.calories = String(Math.round(item.base * (parseFloat(value) || 0))); patchDiet(item.id, patch); checkDietReward({ ...item, ...patch }); };
+            const handleCaloriesChange = (item, value) => { const patch = { calories: value, base: null }; patchDiet(item.id, patch); checkDietReward({ ...item, ...patch }); };
+            const deleteDietItem = (id) => { setDietLogs(prev => ({ ...prev, [date]: (prev[date] || []).filter(item => item.id !== id) })); };
+
+            const totalCalories = todayDiet.reduce((sum, item) => sum + (parseFloat(item.calories) || 0), 0);
+            const calGoal = parseFloat(healthProfile.calorieGoal) || 1500; const rawPercent = (totalCalories / calGoal) * 100;
+            const isOver = rawPercent > 100; const barWidth = Math.min(rawPercent, 100);
+
+            const exportData = async () => {
+                const data = { lastActiveDate, streak, petType, petExps, routines, logs, healthProfile, healthLogs, dietLogs, rewards };
+                const json = JSON.stringify(data, null, 2); const fileName = `GlowUp_Backup_${todayStr}.json`;
+                try {
+                    const file = new File([json], fileName, { type: 'application/json' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Glow Up 備份' }); } 
+                    else { const url = URL.createObjectURL(new Blob([json], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+                    setLastBackup(todayStr); showToast('備份完成，請妥善保存檔案');
+                } catch (err) { if (err && err.name === 'AbortError') return; showToast('備份失敗，請再試一次'); }
+            };
+
+            const importData = (event) => {
+                const file = event.target.files && event.target.files[0]; event.target.value = '';
+                if (!file) return; if (!window.confirm('匯入會覆蓋目前所有資料，要繼續嗎？')) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        rewardsRef.current = isObj(data.rewards) ? data.rewards : {};
+                        setLastActiveDate(typeof data.lastActiveDate === 'string' ? data.lastActiveDate : ''); setStreak(data.streak || 0); setPetType(data.petType || 'penguin');
+                        setPetExps({ ...ZERO_EXPS, ...(isObj(data.petExps) ? data.petExps : {}) }); setRoutines(normalizeRoutines(data.routines)); setLogs(isObj(data.logs) ? data.logs : {});
+                        setHealthProfile({ ...DEFAULT_PROFILE, ...(isObj(data.healthProfile) ? data.healthProfile : {}) }); setHealthLogs(isObj(data.healthLogs) ? data.healthLogs : {}); setDietLogs(isObj(data.dietLogs) ? data.dietLogs : {}); setRewards(rewardsRef.current);
+                        showToast('資料還原成功');
+                    } catch { showToast('讀取檔案失敗'); }
+                };
+                reader.onerror = () => showToast('讀取檔案失敗'); reader.readAsText(file, 'UTF-8');
+            };
+
+            const onTouchStart = (e) => { if (e.target.closest && e.target.closest('input, select, textarea, .autocomplete-list, .autocomplete-item')) { touchRef.current = null; return; } touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+            const onTouchEnd = (e) => {
+                const start = touchRef.current; touchRef.current = null; if (!start) return;
+                const dx = e.changedTouches[0].clientX - start.x; const dy = e.changedTouches[0].clientY - start.y;
+                if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+                const i = TABS.indexOf(activeTab);
+                if (dx < 0 && i < TABS.length - 1) setActiveTab(TABS[i + 1]);
+                if (dx > 0 && i > 0) setActiveTab(TABS[i - 1]);
+            };
+
+            const handleContentClick = () => { if (foodSuggestions.length > 0) { setFoodSuggestions([]); setActiveFoodInputId(null); } };
+
+            const exp = petExps[petType] || 0; const info = getLevelInfo(exp); const currentPet = PETS[petType] || PETS.penguin; const petEmoji = currentPet.stages[info.stageIndex];
+            
+            const getPetSize = () => {
+                if (info.isMax) return 'text-[12rem]'; if (info.level === 3) return 'text-[10rem]';
+                if (info.level === 2) return 'text-[9rem]'; return 'text-[8rem]';
+            };
+
+            const getPetMood = () => {
+                const hour = new Date().getHours(); const isNight = hour >= 22 || hour < 5;
+                const l = logs[todayStr]; const h = healthLogs[todayStr];
+                const hasLogsToday = (l && (l.morning?.length > 0 || l.evening?.length > 0)) || (h && (h.weight || h.bodyFat || h.water > 0)) || (dietLogs[todayStr] && dietLogs[todayStr].length > 0);
+                if (info.isMax) return '👑'; if (isNight) return '💤'; if (hasLogsToday) return '✨'; return '💭';
+            };
+
+            const renderHome = () => {
+                const petData = PETS[petType] || PETS.penguin; const petTitle = petData.titles[info.stageIndex];
+                const activePetTheme = `${petData.gradient} ${petData.border} ${petData.glow}`;
+                
+                return (
+                <div className="animate-fade-in flex flex-col items-center min-h-full pt-2 pb-10" onClick={handleContentClick}>
+                    <div className="text-center px-4 mb-5">
+                        <p className="text-lg text-gray-200 font-bold tracking-wider">"{quote}"</p>
+                    </div>
+
+                    <div className={`w-full border-[3px] rounded-[32px] p-6 pb-8 flex flex-col items-center relative overflow-hidden transition-all duration-700 ${activePetTheme}`}>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-tr from-white/10 to-transparent rounded-full opacity-10 blur-3xl"></div>
+
+                        <div className="w-full flex justify-between items-start mb-4 z-10">
+                            <div className="flex flex-col">
+                                <h2 className="text-gray-100 text-lg font-black whitespace-nowrap mb-1">
+                                    <i className="fas fa-paw neon-text-theme mr-2 text-xl"></i>專屬夥伴
+                                </h2>
+                                <span className={`text-sm px-3 py-1 font-black rounded-lg w-fit bg-white/15 ${petData.accent} whitespace-nowrap border border-white/10`}>
+                                    個性：{petData.personality}
+                                </span>
+                            </div>
+                            {streak > 0 && (
+                                <div className="flex items-center text-sm font-black bg-darkBg/90 px-4 py-2 rounded-xl border-2 border-gray-700 whitespace-nowrap shadow-lg">
+                                    <span className="text-orange-400 mr-2 text-xl animate-bounce-slight">🔥</span>
+                                    連續 <span className="neon-text-theme mx-1 text-xl">{streak}</span> 天
+                                </div>
+                            )}
+                        </div>
+
+                        <button type="button" aria-label={`摸摸${petData.name}`} className="h-64 flex items-center justify-center z-10 mb-6 relative w-full cursor-pointer bg-transparent border-0 focus:outline-none" onClick={(e) => { e.stopPropagation(); handlePetInteract(); }}>
+                            <div className={`absolute top-0 bg-cardBg border-2 border-gray-600 rounded-2xl px-5 py-3 text-lg font-bold max-w-[90%] text-center shadow-2xl z-20 transition-all duration-300 ${interactionMsg ? 'border-amber-400 text-amber-300 animate-bounce' : 'animate-bounce-slight text-gray-100'}`}>
+                                {interactionMsg || getPetMood()}
+                            </div>
+
+                            {hearts.map(heart => (
+                                <div key={heart.id} className="absolute text-5xl animate-heart-float z-30 pointer-events-none" style={{ left: `calc(50% + ${heart.x || 0}px)`, top: `${heart.y ? `calc(50% + ${heart.y}px)` : '40%'}` }} aria-hidden="true">{heart.emoji || '❤️'}</div>
+                            ))}
+
+                            <div className={`transition-all duration-300 mt-10 ${isInteracting ? 'scale-110 rotate-6' : ''} animate-float drop-shadow-[0_0_30px_rgba(255,255,255,0.15)] ${info.isMax ? 'animate-pulse-glow' : ''}`}>
+                                <span className={`${getPetSize()} select-none leading-none block`}>{petEmoji}</span>
+                            </div>
+                        </button>
+
+                        <div className="grid grid-cols-2 gap-3 w-full px-1 mb-8 mt-2 z-10" onClick={e => e.stopPropagation()}>
+                            <button type="button" onClick={() => playInteract('feed')} className="bg-darkBg/80 border-2 border-gray-700 hover:border-amber-500/50 text-gray-200 hover:text-amber-400 rounded-2xl text-base font-bold transition-all flex flex-col items-center justify-center min-h-[72px] active:scale-95 shadow-lg">
+                                <span className="text-2xl mb-1">🍖</span> 餵食
+                            </button>
+                            <button type="button" onClick={() => playInteract('play')} className="bg-darkBg/80 border-2 border-gray-700 hover:border-green-500/50 text-gray-200 hover:text-green-400 rounded-2xl text-base font-bold transition-all flex flex-col items-center justify-center min-h-[72px] active:scale-95 shadow-lg">
+                                <span className="text-2xl mb-1">🪁</span> 玩耍
+                            </button>
+                            <button type="button" onClick={() => playInteract('clean')} className="bg-darkBg/80 border-2 border-gray-700 hover:border-blue-500/50 text-gray-200 hover:text-blue-400 rounded-2xl text-base font-bold transition-all flex flex-col items-center justify-center min-h-[72px] active:scale-95 shadow-lg">
+                                <span className="text-2xl mb-1">✨</span> 洗香香
+                            </button>
+                            <button type="button" onClick={() => playInteract('talk')} className="bg-darkBg/80 border-2 border-gray-700 hover:border-pink-500/50 text-gray-200 hover:text-pink-400 rounded-2xl text-base font-bold transition-all flex flex-col items-center justify-center min-h-[72px] active:scale-95 shadow-lg">
+                                <span className="text-2xl mb-1">💬</span> 聊天
+                            </button>
+                            <button type="button" onClick={() => playInteract('rest')} className="col-span-2 bg-darkBg/80 border-2 border-gray-700 hover:border-purple-500/50 text-gray-200 hover:text-purple-400 rounded-2xl text-base font-bold transition-all flex flex-row items-center justify-center min-h-[64px] active:scale-95 shadow-lg">
+                                <span className="text-2xl mr-3">💤</span> 伴睡休息
+                            </button>
+                        </div>
+
+                        <div className="w-full z-10 bg-darkBg/50 p-4 rounded-2xl border border-white/5">
+                            <div className="flex justify-between items-end mb-3">
+                                <div className="flex flex-col text-left">
+                                    <span className="text-sm uppercase font-black text-gray-300 tracking-widest mb-1">Lv. {info.level} · {petData.name}</span>
+                                    <span className="font-black text-2xl text-white flex items-center">
+                                        {petTitle}
+                                        {info.isMax && <span className="ml-3 text-sm bg-darkBg neon-border-theme px-3 py-1 rounded-full text-white">MAX 👑</span>}
+                                    </span>
+                                </div>
+                                {!info.isMax && <span className="text-base text-gray-100 font-bold bg-black/60 px-3 py-1.5 rounded-lg border border-gray-700 shadow-inner">{info.into} / {info.need} EXP</span>}
+                            </div>
+                            <div className="w-full bg-gray-900 rounded-full h-5 shadow-inset-theme border border-gray-800" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(info.progress)}>
+                                <div className="neon-bg-theme h-5 rounded-full transition-all duration-500 ease-out shadow-theme" style={{ width: `${info.progress}%` }}></div>
+                            </div>
+                            <p className="text-center text-sm text-gray-300 mt-4 font-bold leading-relaxed">
+                                點擊摸摸牠，或使用上方豐富的按鈕與夥伴互動吧！
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="w-full mt-6 bg-cardBg rounded-[24px] p-5 border-2 border-gray-800 flex flex-col items-center">
+                        <p className="text-base text-gray-200 mb-4 text-center font-bold">切換寵物夥伴 (各自獨立培養)</p>
+                        <div className="flex items-center justify-between w-full px-2">
+                            <button type="button" aria-label="上一隻寵物" onClick={handlePrevPet} className="min-tap-target w-14 h-14 rounded-full bg-darkBg border-2 border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-200 hover:text-white transition-colors">
+                                <i className="fas fa-chevron-left text-xl"></i>
+                            </button>
+                            <div className="flex flex-col items-center justify-center bg-black/50 border-2 border-gray-700 rounded-2xl p-4 w-40 relative shadow-inner">
+                                {(() => {
+                                    const otherPet = PETS[petType] || PETS.penguin; const pi = getLevelInfo(petExps[petType] || 0); const otherTitle = otherPet.stages[pi.stageIndex];
+                                    return (
+                                        <>
+                                            <span className="text-5xl mb-2">{otherTitle}</span>
+                                            <span className="text-lg font-black text-white">{otherPet.name}</span>
+                                            <span className="absolute top-2 right-2 text-xs font-black text-gray-400 bg-gray-900 px-2 py-0.5 rounded-lg border border-gray-800">Lv.{pi.isMax ? 'MAX' : pi.level}</span>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                            <button type="button" aria-label="下一隻寵物" onClick={handleNextPet} className="min-tap-target w-14 h-14 rounded-full bg-darkBg border-2 border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-200 hover:text-white transition-colors">
+                                <i className="fas fa-chevron-right text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="w-full mt-6 bg-darkBg border-2 border-gray-800 rounded-[24px] p-5">
+                        <div className="flex justify-between items-center">
+                            <div className="text-base font-bold text-gray-200"><i className="fas fa-database mr-2 text-xl text-gray-400"></i>資料備份與還原</div>
+                            <div className="flex space-x-3">
+                                <button type="button" onClick={exportData} className="min-tap-target bg-gray-800 text-white px-4 rounded-xl text-base font-bold hover:bg-gray-700 border border-gray-600">匯出</button>
+                                <label className="min-tap-target flex items-center justify-center bg-gray-800 text-white px-4 rounded-xl text-base font-bold hover:bg-gray-700 border border-gray-600 cursor-pointer">
+                                    匯入 <input type="file" accept=".json,application/json" onChange={importData} className="sr-only" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                );
+            };
+
+            const renderSkincare = () => {
+                const currentRoutine = routines[time] || []; const currentLogs = (logs[date] && logs[date][time]) ? logs[date][time] : [];
+                return (
+                    <div className="animate-fade-in flex flex-col min-h-full pb-10" onClick={handleContentClick}>
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex bg-cardBg rounded-full p-1.5 flex-1 mr-4 border border-gray-800" role="group" aria-label="任務時段">
+                                <button type="button" aria-pressed={time === 'morning'} className={`min-tap-target flex-1 rounded-full font-black text-lg neon-btn ${time === 'morning' ? 'neon-bg-theme shadow-lg' : 'text-gray-300'}`} onClick={() => setTime('morning')}>早晨日常</button>
+                                <button type="button" aria-pressed={time === 'evening'} className={`min-tap-target flex-1 rounded-full font-black text-lg neon-btn ${time === 'evening' ? 'neon-bg-theme shadow-lg' : 'text-gray-300'}`} onClick={() => setTime('evening')}>夜間日常</button>
+                            </div>
+                            <button type="button" aria-label={isEdit ? '完成編輯' : '編輯清單'} onClick={() => setIsEdit(!isEdit)} className="min-tap-target neon-text-theme w-14 h-14 bg-cardBg rounded-full border-2 border-gray-700 shadow-md flex items-center justify-center">
+                                {isEdit ? <span className="text-xl font-bold">完成</span> : <i className="fas fa-pen text-xl"></i>}
+                            </button>
+                        </div>
+                        {isEdit && (
+                            <div className="mb-8 bg-cardDark p-5 rounded-2xl border-2 border-gray-700 shadow-theme">
+                                <p className="text-base text-gray-200 mb-4 text-center font-bold">點選圖示加入清單（可自訂項目）</p>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {ICONS.map(i => (
+                                        <button type="button" key={i.id} onClick={() => addItem(i)} className="min-tap-target flex flex-col items-center p-4 rounded-xl bg-cardBg border-2 border-gray-800 hover:neon-border-theme active:neon-bg-theme transition-colors">
+                                            <span className="text-4xl mb-2">{i.icon}</span><span className="text-sm font-black text-gray-100">{i.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <div className="flex-1 space-y-4">
+                            {currentRoutine.length === 0 ? (
+                                <div className="text-center text-gray-300 mt-12 text-lg font-bold p-8 bg-cardBg rounded-3xl border border-dashed border-gray-700">{isEdit ? "請選擇上方項目加入清單" : "目前沒有設定，請點擊右上角編輯"}</div>
+                            ) : (
+                                currentRoutine.map((item, index) => {
+                                    const isCompleted = currentLogs.includes(item.id);
+                                    return (
+                                        <div key={item.id} className={`flex items-center p-5 rounded-2xl transition-all border-2 ${isCompleted && !isEdit ? 'bg-black/50 border-gray-600 opacity-70' : 'bg-cardBg border-gray-700 shadow-lg'}`}>
+                                            {isEdit && (
+                                                <div className="flex flex-col mr-3 space-y-2">
+                                                    <button type="button" aria-label="上移" onClick={() => moveItem(index, -1)} className={`min-tap-target w-12 h-12 rounded-xl bg-darkBg border border-gray-700 ${index === 0 ? 'text-gray-700' : 'text-gray-200'}`}><i className="fas fa-chevron-up text-xl"></i></button>
+                                                    <button type="button" aria-label="下移" onClick={() => moveItem(index, 1)} className={`min-tap-target w-12 h-12 rounded-xl bg-darkBg border border-gray-700 ${index === currentRoutine.length - 1 ? 'text-gray-700' : 'text-gray-200'}`}><i className="fas fa-chevron-down text-xl"></i></button>
+                                                </div>
+                                            )}
+                                            <div className="text-5xl mr-4">{item.icon}</div>
+                                            <div className="flex-1 min-w-0">
+                                                {isEdit && item.isCustom ? (
+                                                    <input type="text" aria-label="自訂名稱" placeholder="輸入項目名稱..." value={item.name} onChange={(e) => updateItemProp(item.id, 'name', e.target.value)} className="input-tap-target bg-darkBg px-4 py-2 rounded-xl w-full text-white focus:outline-none focus:neon-border-theme border-2 border-gray-600 text-xl font-black mb-2" />
+                                                ) : (
+                                                    <div className="font-black text-2xl text-gray-100">{item.name}</div>
+                                                )}
+                                                
+                                                {isEdit ? (
+                                                    <input type="text" aria-label="備註/品牌" placeholder="備註或品牌(選填)..." value={item.brand} onChange={(e) => updateItemProp(item.id, 'brand', e.target.value)} className="input-tap-target bg-darkBg px-4 py-3 rounded-xl mt-2 w-full text-white focus:outline-none focus:neon-border-theme border-2 border-gray-600 text-lg" />
+                                                ) : (
+                                                    <div className="text-lg text-gray-300 mt-1 font-medium">{item.brand || '無備註'}</div>
+                                                )}
+                                            </div>
+                                            {isEdit ? (
+                                                <button type="button" aria-label="刪除" onClick={() => deleteItem(item.id)} className="min-tap-target ml-4 text-red-400 w-14 h-14 rounded-full bg-red-500/15 border border-red-500/30"><i className="fas fa-trash text-xl"></i></button>
+                                            ) : (
+                                                <button type="button" aria-label="標記完成" aria-pressed={isCompleted} onClick={() => toggleLog(item.id)} className={`min-tap-target ml-5 w-16 h-16 rounded-full flex items-center justify-center border-[3px] transition-all ${isCompleted ? 'neon-bg-theme neon-border-theme text-white shadow-theme' : 'border-gray-500 text-transparent bg-darkBg'}`}><i className="fas fa-check text-3xl"></i></button>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderHealth = () => (
+                <div className="animate-fade-in space-y-6 pb-10" onClick={handleContentClick}>
+                    <div className="bg-cardBg p-6 rounded-[24px] border-2 border-gray-800 shadow-md">
+                        <h2 className="text-xl font-black text-gray-100 mb-6 flex items-center"><i className="fas fa-user mr-3 text-2xl neon-text-theme"></i>基本資料設定</h2>
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xl font-bold text-gray-200">性別</span>
+                                <div className="flex bg-darkBg border-2 border-gray-700 rounded-xl p-1.5" role="group">
+                                    <button type="button" aria-pressed={healthProfile.gender === 'male'} onClick={() => handleGenderChange('male')} className={`min-tap-target px-6 rounded-lg text-lg font-black transition-colors ${healthProfile.gender === 'male' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400'}`}>男生</button>
+                                    <button type="button" aria-pressed={healthProfile.gender === 'female'} onClick={() => handleGenderChange('female')} className={`min-tap-target px-6 rounded-lg text-lg font-black transition-colors ${healthProfile.gender === 'female' ? 'neon-bg-theme text-white shadow-theme' : 'text-gray-400'}`}>女生</button>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <label htmlFor="height" className="text-xl font-bold text-gray-200">身高 (cm)</label>
+                                <input id="height" type="number" inputMode="decimal" placeholder="160" value={healthProfile.height} onChange={(e) => setHealthProfile({ ...healthProfile, height: e.target.value })} className="input-tap-target bg-darkBg w-32 text-right px-4 py-3 rounded-xl text-white border-2 border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-xl font-bold" />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <label htmlFor="calorieGoal" className="text-xl font-bold text-gray-200">熱量目標 (kcal)</label>
+                                <input id="calorieGoal" type="number" inputMode="numeric" placeholder="1500" value={healthProfile.calorieGoal} onChange={(e) => setHealthProfile({ ...healthProfile, calorieGoal: e.target.value })} className="input-tap-target bg-darkBg w-32 text-right px-4 py-3 rounded-xl text-white border-2 border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-xl font-bold" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-cardBg p-6 rounded-[24px] border-2 neon-border-theme shadow-[0_0_15px_rgba(255,42,133,0.15)]">
+                        <h2 className="text-xl font-black text-gray-100 mb-6 flex items-center"><i className="fas fa-weight-scale mr-3 text-2xl neon-text-theme"></i>今日數值 ({date})</h2>
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <label htmlFor="weight" className="text-xl font-bold text-gray-200">體重 (kg)</label>
+                                <input id="weight" type="number" inputMode="decimal" step="0.1" value={todayHealth.weight} onChange={(e) => updateHealthLog('weight', e.target.value)} onBlur={(e) => { if (parseFloat(e.target.value) > 0) rewardOnce('weight', 1, '體重'); }} className="input-tap-target bg-darkBg w-32 text-right px-4 py-3 rounded-xl text-white border-2 border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-xl font-bold" />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <label htmlFor="bodyFat" className="text-xl font-bold text-gray-200">體脂率 (%)</label>
+                                <input id="bodyFat" type="number" inputMode="decimal" step="0.1" value={todayHealth.bodyFat} onChange={(e) => updateHealthLog('bodyFat', e.target.value)} onBlur={(e) => { if (parseFloat(e.target.value) > 0) rewardOnce('bodyFat', 1, '體脂'); }} className="input-tap-target bg-darkBg w-32 text-right px-4 py-3 rounded-xl text-white border-2 border-gray-700 focus:neon-border-theme focus:outline-none transition-colors text-xl font-bold" />
+                            </div>
+                        </div>
+                        <div className="mt-8 pt-6 border-t-2 border-gray-800 flex justify-between items-center">
+                            <span className="text-gray-200 text-xl font-bold">BMI 指數</span>
+                            <span className="text-4xl font-black neon-text-theme">{bmi}</span>
+                        </div>
+                    </div>
+
+                    <div className="bg-cardBg p-6 rounded-[24px] border-2 border-gray-800 shadow-md">
+                        <h2 className="text-xl font-black text-gray-100 mb-6 flex items-center"><i className="fas fa-chart-line mr-3 text-2xl neon-text-theme"></i>近期體重趨勢</h2>
+                        {weightPoints.length >= 2 ? <WeightChart points={weightPoints} /> : <p className="text-base text-gray-400 text-center py-8 font-bold border-2 border-dashed border-gray-700 rounded-xl">記錄兩天以上體重後顯示圖表</p>}
+                    </div>
+                </div>
+            );
+
+            const renderDiet = () => {
+                const water = parseInt(todayHealth.water) || 0; const currentWeight = parseFloat(todayHealth.weight) || (weightPoints.length > 0 ? weightPoints[weightPoints.length-1].w : 0);
+                const WATER_GOAL_ML = currentWeight > 0 ? Math.round(currentWeight * 30) : 2000; const displayWater = water < 50 && water > 0 ? water * 250 : water;
+                
+                return (
+                    <div className="animate-fade-in flex flex-col min-h-full pb-10" onClick={handleContentClick}>
+                        <div className="bg-cardBg rounded-[24px] border-2 border-gray-800 p-6 mb-6 shadow-lg">
+                            <div className="flex justify-between items-end mb-4">
+                                <h2 className="text-xl font-black text-gray-100 flex items-center"><i className="fas fa-droplet mr-3 text-2xl text-blue-400"></i>喝水追蹤</h2>
+                                <div className="text-right">
+                                    <span className="text-4xl font-black text-blue-400 drop-shadow-md">{displayWater}</span>
+                                    <span className="text-base font-bold text-gray-400 ml-1">/ {WATER_GOAL_ML} ml</span>
+                                </div>
+                            </div>
+                            <div className="w-full bg-gray-900 rounded-full h-5 shadow-inset-theme mt-2 mb-6 border border-gray-700" role="progressbar" aria-valuemin="0" aria-valuemax={WATER_GOAL_ML} aria-valuenow={displayWater}>
+                                <div className="h-5 rounded-full transition-all duration-500 ease-out bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]" style={{ width: `${Math.min((displayWater / WATER_GOAL_ML) * 100, 100)}%` }}></div>
+                            </div>
+                            <div className="flex justify-between items-center space-x-3 mb-4">
+                                <button type="button" onClick={() => changeWater(250, displayWater, WATER_GOAL_ML)} className="min-tap-target flex-1 bg-darkBg border-2 border-gray-700 hover:border-blue-500 text-gray-200 hover:text-blue-300 py-3 rounded-2xl text-lg font-black transition-all shadow-md">
+                                    <i className="fas fa-mug-hot mr-2 text-xl"></i> +250
+                                </button>
+                                <button type="button" onClick={() => changeWater(500, displayWater, WATER_GOAL_ML)} className="min-tap-target flex-1 bg-darkBg border-2 border-gray-700 hover:border-blue-500 text-gray-200 hover:text-blue-300 py-3 rounded-2xl text-lg font-black transition-all shadow-md">
+                                    <i className="fas fa-bottle-water mr-2 text-xl"></i> +500
+                                </button>
+                                <button type="button" onClick={() => changeWater(-displayWater, displayWater, WATER_GOAL_ML)} className="min-tap-target w-16 bg-red-500/10 border-2 border-red-500/30 text-red-400 rounded-2xl text-xl transition-all shadow-md">
+                                    <i className="fas fa-rotate-left"></i>
+                                </button>
+                            </div>
+                            
+                            {/* NEW: Custom Water Input for precise logging */}
+                            <div className="pt-2 border-t border-gray-700">
+                                {showCustomWaterInput ? (
+                                    <form onSubmit={(e) => handleCustomWaterSubmit(e, displayWater, WATER_GOAL_ML)} className="flex items-center space-x-2 mt-2">
+                                        <input type="number" inputMode="numeric" placeholder="輸入水量(ml)" value={customWaterInput} onChange={(e) => setCustomWaterInput(e.target.value)} className="input-tap-target flex-1 bg-darkBg border-2 border-gray-600 rounded-xl px-4 text-lg font-bold text-white focus:neon-border-theme focus:outline-none" autoFocus />
+                                        <button type="submit" className="min-tap-target bg-blue-600 text-white px-5 rounded-xl font-bold text-lg shadow-md">加入</button>
+                                        <button type="button" onClick={() => setShowCustomWaterInput(false)} className="min-tap-target bg-gray-700 text-white px-4 rounded-xl text-lg"><i className="fas fa-times"></i></button>
+                                    </form>
+                                ) : (
+                                    <button type="button" onClick={() => setShowCustomWaterInput(true)} className="w-full text-center text-blue-400 font-bold py-2 mt-1 hover:text-blue-300 transition-colors text-lg">
+                                        <i className="fas fa-pen mr-2"></i>自己輸入其他水量
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* NEW: Quick Food Entry Section for Elders */}
+                        <div className="bg-cardDark rounded-[24px] border-2 border-gray-700 p-5 mb-6 shadow-md">
+                            <h2 className="text-lg font-bold text-gray-200 mb-4 flex items-center"><i className="fas fa-bolt mr-2 text-amber-400"></i>快速簡單紀錄</h2>
+                            <div className="grid grid-cols-2 gap-3">
+                                {QUICK_FOODS.map(food => (
+                                    <button type="button" key={food.id} onClick={() => addQuickDietRow(food)} className="min-tap-target bg-cardBg border-2 border-gray-700 hover:border-amber-500/50 rounded-xl p-3 flex flex-col items-center justify-center transition-all active:scale-95">
+                                        <span className="text-3xl mb-1">{food.icon}</span>
+                                        <span className="text-base font-black text-gray-100">{food.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="bg-cardBg rounded-[24px] border-2 border-gray-800 p-6 mb-6 shadow-lg">
+                            <div className="flex justify-between items-center mb-5">
+                                <h2 className="text-xl font-black text-gray-100 flex items-center"><i className="fas fa-utensils mr-3 text-2xl neon-text-theme"></i>進階飲食紀錄</h2>
+                                <button type="button" onClick={addDietRow} className="min-tap-target neon-text-theme text-lg font-black border-2 neon-border-theme px-5 rounded-full hover:neon-bg-theme hover:text-white transition-colors flex items-center">
+                                    <i className="fas fa-plus mr-2"></i> 新增詳細
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {todayDiet.map(item => {
+                                    const qty = item.qty ?? '1';
+                                    return (
+                                        <div key={item.id} className="bg-darkBg border-2 border-gray-700 rounded-2xl p-4 shadow-md">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <select aria-label="餐別" value={item.meal} onChange={(e) => patchDiet(item.id, { meal: e.target.value })} className="input-tap-target bg-cardBg text-white border-2 border-gray-600 rounded-xl px-4 py-2 text-lg font-bold focus:outline-none focus:neon-border-theme">
+                                                    <option>早餐</option><option>午餐</option><option>晚餐</option><option>點心</option><option>飲料</option>
+                                                </select>
+                                                <button type="button" aria-label="刪除這筆飲食" onClick={() => deleteDietItem(item.id)} className="min-tap-target text-red-400 w-12 h-12 flex items-center justify-center bg-red-500/10 rounded-full"><i className="fas fa-times text-2xl"></i></button>
+                                            </div>
+
+                                            <div className="relative mb-3">
+                                                <input type="text" aria-label="食物內容" placeholder="輸入關鍵字，如: 蛋餅" value={item.food} onChange={(e) => handleFoodInputChange(item, e.target.value)} onClick={(e) => e.stopPropagation()} className="input-tap-target bg-cardBg text-white border-2 border-gray-600 rounded-xl px-4 py-3 w-full text-lg font-bold focus:outline-none focus:neon-border-theme" />
+                                                {activeFoodInputId === item.id && foodSuggestions.length > 0 && (
+                                                    <div className="autocomplete-list shadow-theme" role="listbox">
+                                                        {foodSuggestions.map((food) => (
+                                                            <div key={food.name} role="option" className="autocomplete-item flex justify-between items-center" onClick={(e) => { e.stopPropagation(); selectFoodSuggestion(item, food); }}>
+                                                                <div>{food.name} <span>({food.unit})</span></div>
+                                                                <div className="neon-text-theme font-black text-xl">{food.calories}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {item.base ? <p className="text-sm text-gray-300 font-bold mb-3 bg-gray-800 inline-block px-3 py-1 rounded-lg">每份參考：{item.unit} · {item.base} kcal</p> : null}
+
+                                            <div className="flex items-center justify-between space-x-4 bg-black/30 p-3 rounded-xl border border-gray-800">
+                                                <label className="flex flex-col text-sm text-gray-300 font-bold flex-1">
+                                                    份數
+                                                    <input type="number" inputMode="decimal" min="0" step="0.5" value={qty} onChange={(e) => handleQtyChange(item, e.target.value)} className="input-tap-target bg-cardBg text-white border-2 border-gray-600 rounded-xl px-3 mt-1 text-xl text-center focus:outline-none focus:neon-border-theme font-black" />
+                                                </label>
+                                                <label className="flex flex-col text-sm text-gray-300 font-bold flex-1">
+                                                    總熱量 (kcal)
+                                                    <input type="number" inputMode="numeric" min="0" placeholder="0" value={item.calories} onChange={(e) => handleCaloriesChange(item, e.target.value)} className="input-tap-target bg-cardBg text-white border-2 border-gray-600 rounded-xl px-3 mt-1 text-xl text-center focus:outline-none focus:neon-border-theme font-black text-amber-400" />
+                                                </label>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {todayDiet.length === 0 && <div className="text-center text-gray-400 py-6 text-lg font-bold border-2 border-dashed border-gray-700 rounded-2xl">尚未記錄詳細飲食</div>}
+                            </div>
+                        </div>
+
+                        <div className="bg-cardDark border-2 neon-border-theme rounded-[24px] p-6 flex flex-col mt-auto shadow-[0_0_20px_rgba(255,42,133,0.2)]">
+                            <div className="flex justify-between items-end mb-4">
+                                <span className="font-black text-gray-100 text-xl">今日總熱量</span>
+                                <div className="text-right">
+                                    <span className="text-4xl font-black neon-text-theme drop-shadow-md">{Math.round(totalCalories)}</span>
+                                    <span className="text-base font-bold text-gray-300 ml-2">/ {calGoal} kcal</span>
+                                </div>
+                            </div>
+                            <div className="w-full bg-gray-900 rounded-full h-5 shadow-inset-theme mt-1 border border-gray-700" role="progressbar" aria-valuemin="0" aria-valuemax={calGoal} aria-valuenow={Math.round(totalCalories)}>
+                                <div className={`h-5 rounded-full transition-all duration-500 ease-out ${isOver ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.8)]' : 'neon-bg-theme shadow-theme'}`} style={{ width: `${barWidth}%` }}></div>
+                            </div>
+                            {isOver && <p className="text-amber-400 text-base font-bold text-right mt-3 bg-amber-500/10 inline-block self-end px-3 py-1.5 rounded-lg">今天超過目標了，明天再慢慢調整就好。</p>}
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className={`app-shell flex flex-col max-w-md mx-auto relative overflow-hidden bg-darkBg text-white swipe-container ${themeClass}`} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+                    <div className="sr-only" role="status" aria-live="polite">{toast}</div>
+                    {toast && (
+                        <div aria-hidden="true" className="absolute top-24 left-1/2 transform -translate-x-1/2 z-50 neon-bg-theme text-white px-6 py-3 rounded-full font-black text-lg shadow-theme animate-bounce whitespace-nowrap border-2 border-white/20">
+                            {toast}
+                        </div>
+                    )}
+
+                    <div className="p-4 pb-2 shrink-0">
+                        <h1 className="text-3xl font-black italic tracking-wider neon-text-light text-center mb-6 mt-2">Delicate Glow Up</h1>
+                        <div className="flex justify-center items-center space-x-4">
+                            <button type="button" aria-label="前一天" onClick={() => changeDate(-1)} className="min-tap-target w-14 h-14 rounded-full bg-cardBg border-2 border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-200 hover:text-white transition-colors shadow-md">
+                                <i className="fas fa-chevron-left text-xl"></i>
+                            </button>
+                            <div className="relative hover:neon-border-theme rounded-full transition-colors flex-1 max-w-[200px]">
+                                <div className="bg-cardBg border-2 border-gray-700 rounded-full py-3 text-center text-xl font-black flex items-center justify-center neon-text-theme cursor-pointer shadow-md w-full">
+                                    {date} <i className="fas fa-calendar-alt ml-3 opacity-60 text-lg"></i>
+                                </div>
+                                <input type="date" aria-label="選擇日期" value={date} onChange={(e) => { if (e.target.value) setDate(e.target.value); }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer min-tap-target" />
+                            </div>
+                            <button type="button" aria-label="後一天" onClick={() => changeDate(1)} className="min-tap-target w-14 h-14 rounded-full bg-cardBg border-2 border-gray-700 hover:neon-border-theme flex items-center justify-center text-gray-200 hover:text-white transition-colors shadow-md">
+                                <i className="fas fa-chevron-right text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex px-2 mt-4 mb-2 shrink-0 border-b-2 border-gray-800" role="tablist">
+                        {TAB_DEFS.map(t => (
+                            <button key={t.id} type="button" role="tab" aria-selected={activeTab === t.id} className={`min-tap-target flex-1 pb-4 pt-2 text-lg font-black transition-all ${activeTab === t.id ? 'neon-text-theme border-b-[3px] neon-border-theme' : 'text-gray-400 hover:text-gray-200'}`} onClick={() => setActiveTab(t.id)}>
+                                <i className={`fas ${t.icon} mr-1.5 text-xl`}></i> <br className="block sm:hidden" />{t.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto px-5 pb-8 pt-2" role="tabpanel">
+                        {activeTab === 'home' && renderHome()}
+                        {activeTab === 'skincare' && renderSkincare()}
+                        {activeTab === 'health' && renderHealth()}
+                        {activeTab === 'diet' && renderDiet()}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
